@@ -1,86 +1,86 @@
-# Camarine — how the code is organised
+# Camarine — Organisation du code
 
-Read this before your first change. Every file has one job, and the first comment in each file says what that job is.
+Lisez ceci avant votre première modification. Chaque fichier a un seul rôle, et le premier commentaire de chaque fichier indique quel est ce rôle.
 
-## Data flow (one sentence per step)
+## Flux de données (une phrase par étape)
 
-1. **Copernicus Marine** → `copernicus_pipeline.py` downloads daily SST (REP 1982–2024 + NRT 2025→today) and `hobday.py` detects marine heatwaves (P90, 1991–2020 baseline, ≥ 5 days).
-2. **FastAPI** (`backend/`) exposes this as `GET /api/mhw` (point time series + events) and `GET /api/map` (SST pixels over France for one day), cached on disk in `cache_data/`.
-3. **Frontend** (`src/api/copernicus.ts`) fetches both; hooks in `src/hooks/` hold the state; components in `src/components/` only display it.
+1. **Copernicus Marine** → `copernicus_pipeline.py` télécharge la SST quotidienne (REP 1982–2024 + NRT 2025→aujourd'hui) et `hobday.py` détecte les canicules marines (P90, période de référence 1991–2020, ≥ 5 jours).
+2. **FastAPI** (`backend/`) expose ces données via `GET /api/mhw` (série temporelle locale + événements) et `GET /api/map` (pixels SST sur la France pour un jour donné), mis en cache sur le disque dans `cache_data/`.
+3. **Frontend** (`src/api/copernicus.ts`) récupère les deux ; les hooks dans `src/hooks/` gèrent l'état ; les composants dans `src/components/` se contentent de l'afficher.
 
 ```
 Copernicus ─► copernicus_pipeline.py + hobday.py ─► backend/*_service.py ─► backend/main.py (routes)
                                                                                    │  /api/mhw, /api/map
                                                                                    ▼
-                          src/api/copernicus.ts ─► src/hooks/* ─► src/App.tsx ─► src/components/<tab>/*
+                          src/api/copernicus.ts ─► src/hooks/* ─► src/App.tsx ─► src/components/<onglet>/*
 ```
 
 ## Frontend (`src/`)
 
-| Folder | What goes there | Rule |
-|---|---|---|
-| `types.ts` | Every shape shared between files (`SpeciesItem`, `Pipeline`, `MapCell`…) | Add a type here if two files need it |
-| `config.ts` | Constants: Toulon location, France bounding box, baseline years, tile URLs | No magic numbers in components |
-| `data/` | Static content: species, photos, museum chapters, data-source metadata | Plain data, no logic |
-| `lib/` | Pure functions: Hobday categories, colours, dates, CSV/JSON export, audio synth | No React, easy to unit-test |
-| `api/` | The only place that calls `fetch` | |
-| `hooks/` | State + side effects, one concern per hook | Components don't fetch or keep shared state |
-| `components/layout/` | Header, bottom bar, loading screen | |
-| `components/map/` | Leaflet map; one hook per layer (`useThermalLayer`, `useSpeciesMarkers`, …) | |
-| `components/visualiser/` | Tab 1: filters, telemetry pill, legend, species card | |
-| `components/comprendre/` | Tab 2: KPIs, Hobday explainer, strip plot, daily chart, events table | |
-| `components/partager/` | Tab 3: export panel, preview modal, forum | |
-| `App.tsx` | Holds state shared across tabs, picks which tab to render | Keep it short: wire, don't implement |
+| Dossier                  | Ce qu'il contient                                                                                       | Règle                                                                  |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| `types.ts`               | Toutes les structures de données partagées entre fichiers (`SpeciesItem`, `Pipeline`, `MapCell`…)       | Ajoutez un type ici si deux fichiers en ont besoin                     |
+| `config.ts`              | Constantes : coordonnées de Toulon, boîte englobante de la France, années de référence, URLs des tuiles | Aucun nombre magique dans les composants                               |
+| `data/`                  | Contenu statique : espèces, photos, chapitres du musée, métadonnées des sources                         | Données brutes uniquement, aucune logique                              |
+| `lib/`                   | Fonctions pures : catégories Hobday, couleurs, dates, export CSV/JSON, synthé audio                     | Pas de React, facile à tester unitairement                             |
+| `api/`                   | Le seul endroit qui appelle `fetch`                                                                     |                                                                        |
+| `hooks/`                 | État + effets de bord, une seule responsabilité par hook                                                | Les composants ne font pas de `fetch` et ne gardent pas d'état partagé |
+| `components/layout/`     | En-tête (Header), barre inférieure (BottomBar), écran de chargement                                     |                                                                        |
+| `components/map/`        | Carte Leaflet ; un hook par couche (`useThermalLayer`, `useSpeciesMarkers`, …)                          |                                                                        |
+| `components/visualiser/` | Onglet 1 : filtres, pilule de télémétrie, légende, fiche espèce                                         |                                                                        |
+| `components/comprendre/` | Onglet 2 : KPIs, explicatif Hobday, strip plot, graphique quotidien, tableau des événements             |                                                                        |
+| `components/partager/`   | Onglet 3 : panneau d'export, modale d'aperçu, forum                                                     |                                                                        |
+| `App.tsx`                | Détient l'état partagé entre les onglets, choisit quel onglet afficher                                  | Gardez-le court : connectez les éléments, n'implémentez pas de logique |
 
-### Where do I change…
+### Où dois-je aller pour modifier…
 
-| I want to… | Edit |
-|---|---|
-| Add / edit a species | `src/data/species.ts` (+ photos in `src/data/speciesImages.ts`) |
-| Change heatwave category colours or thresholds | `src/lib/hobday.ts` |
-| Change the SST colour scale | `src/lib/colors.ts` |
-| Change what's in the CSV/JSON export | `src/lib/export.ts` |
-| Change the monitored location (Toulon) | `src/config.ts` → `PIPELINE_LOCATION` |
-| Add a filter to the map | `src/hooks/useMapSettings.ts` (state) + `src/components/visualiser/FilterPanel.tsx` (UI) |
-| Show/hide something only for experts | wrap it in `settings.expert && …` (state in `src/hooks/useMapSettings.ts`) |
-| Change the home view / how far users can zoom out | `FRANCE_BOUNDS` (home view) and `DATA_BOUNDS` (fetched area = pan/zoom limit) in `src/config.ts`; logic in `lockToData` / `goHome`, `src/components/map/useLeafletMap.ts` |
-| Change pixel tooltips on the map | `src/components/map/thermalPopups.ts` |
-| Add a new tab | `AppMode` in `types.ts`, a button in `layout/Header.tsx`, a `components/<tab>/<Tab>View.tsx`, one line in `App.tsx` |
-| Add an API endpoint | `backend/<name>_service.py` (logic) + a route in `backend/main.py`, then a function in `src/api/copernicus.ts` |
+| Je veux…                                                      | Fichier à modifier                                                                                                                                                                                  |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ajouter / modifier une espèce                                 | `src/data/species.ts` (+ photos dans `src/data/speciesImages.ts`)                                                                                                                                   |
+| Changer les couleurs ou les seuils des catégories de canicule | `src/lib/hobday.ts`                                                                                                                                                                                 |
+| Changer l'échelle de couleurs de la SST                       | `src/lib/colors.ts`                                                                                                                                                                                 |
+| Changer le contenu de l'export CSV/JSON                       | `src/lib/export.ts`                                                                                                                                                                                 |
+| Changer le lieu surveillé (Toulon)                            | `src/config.ts` → `PIPELINE_LOCATION`                                                                                                                                                               |
+| Ajouter un filtre à la carte                                  | `src/hooks/useMapSettings.ts` (état) + `src/components/visualiser/FilterPanel.tsx` (UI)                                                                                                             |
+| Afficher / masquer un élément uniquement pour les experts     | L'englober dans `settings.expert && …` (état dans `src/hooks/useMapSettings.ts`)                                                                                                                    |
+| Changer la vue par défaut / la limite de dézoom               | `FRANCE_BOUNDS` (vue d'accueil) et `DATA_BOUNDS` (zone téléchargée = limite de déplacement/zoom) dans `src/config.ts` ; logique dans `lockToData` / `goHome`, `src/components/map/useLeafletMap.ts` |
+| Changer les infobulles (tooltips) des pixels sur la carte     | `src/components/map/thermalPopups.ts`                                                                                                                                                               |
+| Ajouter un nouvel onglet                                      | `AppMode` dans `types.ts`, un bouton dans `layout/Header.tsx`, un `components/<onglet>/<Onglet>View.tsx`, une ligne dans `App.tsx`                                                                  |
+| Ajouter un endpoint API                                       | `backend/<nom>_service.py` (logique) + une route dans `backend/main.py`, puis une fonction dans `src/api/copernicus.ts`                                                                             |
 
-### Splitting work between people
+### Répartition du travail en équipe
 
-Folders map to features, so people can work in parallel with few merge conflicts: one person per tab folder (`visualiser/`, `comprendre/`, `partager/`), one on `components/map/`, one on `backend/` + the Python pipeline. Shared files that need coordination: `types.ts`, `App.tsx`, `hooks/useCopernicusData.ts`.
+Les dossiers correspondent aux fonctionnalités, ce qui permet de travailler en parallèle avec très peu de conflits de fusion (merge conflicts) : une personne par dossier d'onglet (`visualiser/`, `comprendre/`, `partager/`), une sur `components/map/`, une sur `backend/` + le pipeline Python. Fichiers partagés nécessitant de la coordination : `types.ts`, `App.tsx`, `hooks/useCopernicusData.ts`.
 
 ## Backend (`backend/`)
 
-| File | Role |
-|---|---|
-| `main.py` | Routes only (`/api/health`, `/api/mhw`, `/api/map`) and CORS |
-| `mhw_service.py` | Point time series + Hobday events |
-| `map_service.py` | Gridded SST for one day; falls back up to 3 days when NRT data is late |
-| `cache.py` | JSON files in `cache_data/` (override with `CAMARINE_CACHE_DIR`) |
+| Fichier          | Rôle                                                                                                     |
+| ---------------- | -------------------------------------------------------------------------------------------------------- |
+| `main.py`        | Routes uniquement (`/api/health`, `/api/mhw`, `/api/map`) et configuration CORS                          |
+| `mhw_service.py` | Série temporelle locale + événements Hobday                                                              |
+| `map_service.py` | Grille SST pour un jour donné ; recule jusqu'à 3 jours en arrière lorsque les données NRT sont en retard |
+| `cache.py`       | Fichiers JSON dans `cache_data/` (modifiable via `CAMARINE_CACHE_DIR`)                                   |
 
-Environment variables: `ALLOWED_ORIGINS` (comma-separated, for hosting), `CAMARINE_CACHE_DIR`.
+Variables d'environnement : `ALLOWED_ORIGINS` (séparées par des virgules, pour l'hébergement), `CAMARINE_CACHE_DIR`.
 
-## Map behaviour
+## Comportement de la carte
 
-- **Home view** = all of metropolitan France incl. Corsica (`FRANCE_BOUNDS`), recomputed on window resize until the user moves the map.
-- **Limits**: users can't zoom out or pan beyond `DATA_BOUNDS`, which is also the area requested from `/api/map`. So every bit of sea on screen has a temperature (except a few pixels of rounding at the very edge).
-- **Rendering**: pixels are painted into one canvas image (`useThermalLayer.ts`), ~175k pixels in about 0.5 s. One tooltip follows the cursor. Canvas rows are spaced in Mercator so pixels stay aligned with the coastline.
+- **Vue d'accueil** = toute la France métropolitaine, Corse comprise (`FRANCE_BOUNDS`), recalculée lors du redimensionnement de la fenêtre tant que l'utilisateur n'a pas déplacé la carte.
+- **Limites** : les utilisateurs ne peuvent pas dézoomer ou se déplacer au-delà de `DATA_BOUNDS`, qui correspond également à la zone demandée à `/api/map`. Ainsi, chaque portion de mer visible à l'écran possède une température (à l'exception de quelques pixels d'arrondi sur l'extrême bordure).
+- **Rendu** : les pixels sont peints dans une seule image canvas (`useThermalLayer.ts`), soit ~175 000 pixels en environ 0,5 s. Une infobulle unique suit le curseur. Les lignes du canvas sont espacées selon la projection de Mercator afin que les pixels restent alignés avec le trait de côte.
 
-## Known issues (not fixed, so behaviour stays as it was)
+## Problèmes connus (non corrigés pour conserver le comportement actuel)
 
-- **Map heatwave categories use Toulon's thresholds for every pixel.** Each pixel is compared with the climatology/P90 of the single `/api/mhw` point (Toulon), not its own. Cold Atlantic/Channel water will almost never show a heatwave, and warm southern water will over-trigger. A correct map needs a per-pixel climatology/P90 grid (computed once from the 1991–2020 REP data and cached).
+- **Les catégories de canicule sur la carte utilisent les seuils de Toulon pour chaque pixel.** Chaque pixel est comparé à la climatologie / P90 du point unique `/api/mhw` (Toulon), et non aux siens. Les eaux plus froides de l'Atlantique et de la Manche n'afficheront presque jamais de canicule, tandis que les eaux chaudes du sud sur-déclencheront. Une carte exacte nécessite une grille de climatologie / P90 calculée par pixel (calculée une fois à partir des données REP 1991–2020 et mise en cache).
 
-Things on screen that are **not** computed from data. Worth fixing or labelling before showing it to scientists:
+Éléments affichés à l'écran qui **ne sont pas** calculés à partir des données réelles (à corriger ou à étiqueter clairement avant toute présentation à des scientifiques) :
 
-- **Period mode map tooltips**: "Fréquence" and "Durée moy" are pseudo-random numbers seeded by the pixel's coordinates (`useThermalLayer.ts`), and the period average SST is a 40/60 blend of the pixel with the Toulon series average, not a per-pixel average.
-- **Species card "SST {year}"** is a linear interpolation between two hard-coded values (`baseSst2015`, `sst2026`) scaled by today's anomaly (`SpeciesCard.tsx`).
-- **Species SST in exports** falls back to a latitude-based guess when no map pixels are loaded (`lib/speciesSst.ts`).
-- **Picking a date outside the loaded series** inserts a placeholder record that copies the current day's SST/threshold (`selectDate` in `useCopernicusData.ts`), so the telemetry pill shows yesterday's numbers under the new date.
-- **Forum** is local only (resets on reload); "3 Observateurs en ligne" and the two seed messages are hard-coded.
-- **Museum / "Fresque Murale" mode** (`useMuseumTour.ts`, `MuseumPanel.tsx`, `MuseumControls.tsx`) is unreachable: no button sets `mode = 'museum'`. Either add a tab for it or delete those three files.
-- `MUSEUM_SECTIONS` references species that no longer exist (`tortue-caouanne`, `meduse-pelagia`, `morue-atlantique`); they're skipped.
-- If the backend is down, the app shows empty data: there is no fallback to `public/data/copernicus_pipeline.json` (the old README said there was).
-- The NASA GHRSST raster layer always shows 2023-08-15, whatever date is selected.
+- **Infobulles de la carte en mode Période** : « Fréquence » et « Durée moy » sont des nombres pseudo-aléatoires générés (seedés) à partir des coordonnées du pixel (`useThermalLayer.ts`), et la SST moyenne sur la période est un mélange 40/60 entre le pixel et la moyenne de la série de Toulon, et non une vraie moyenne par pixel.
+- **« SST {année} » sur les fiches espèces** : il s'agit d'une interpolation linéaire entre deux valeurs codées en dur (`baseSst2015`, `sst2026`) modulée par l'anomalie du jour (`SpeciesCard.tsx`).
+- **SST des espèces dans les exports** : se rabat sur une estimation basée sur la latitude lorsqu'aucun pixel de carte n'est chargé (`lib/speciesSst.ts`).
+- **Sélectionner une date en dehors de la série chargée** insère un enregistrement temporaire qui copie la SST et le seuil du jour actuel (`selectDate` dans `useCopernicusData.ts`), de sorte que la pilule de télémétrie affiche les chiffres de la veille sous la nouvelle date.
+- **Le Forum** est uniquement local (réinitialisé au rechargement de la page) ; « 3 Observateurs en ligne » et les deux messages initiaux sont codés en dur.
+- **Le mode Musée / « Fresque Murale »** (`useMuseumTour.ts`, `MuseumPanel.tsx`, `MuseumControls.tsx`) est inaccessible : aucun bouton n'active `mode = 'museum'`. Il faut soit ajouter un onglet pour ce mode, soit supprimer ces trois fichiers.
+- `MUSEUM_SECTIONS` fait référence à des espèces qui n'existent plus (`tortue-caouanne`, `meduse-pelagia`, `morue-atlantique`) ; elles sont ignorées.
+- Si le backend est arrêté, l'application affiche des données vides : il n'y a pas de repli (fallback) automatique vers `public/data/copernicus_pipeline.json` (contrairement à ce qu'indiquait l'ancien README).
+- La couche raster satellite NASA GHRSST affiche toujours la date du `2023-08-15`, quelle que soit la date sélectionnée.

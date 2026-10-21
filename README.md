@@ -1,78 +1,54 @@
 # Camarine
 
-Camarine is a French-first web app showing marine heatwaves around the French
-coast and their impact on marine species. All data comes live from the
-Copernicus Marine API (no NetCDF files are needed to run the app):
+Camarine est une application web conçue en français montrant les canicules marines autour des côtes françaises et leur impact sur les espèces marines. Toutes les données proviennent en direct de l'API Copernicus Marine (aucun fichier NetCDF n'est nécessaire pour faire tourner l'application) :
 
-- `C3S-GLO-SST-L4-REP-OBS-SST` (1982–2024) for the 1991–2020 baseline,
-- `METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2` (2025 → today) for recent days.
+- `C3S-GLO-SST-L4-REP-OBS-SST` (1982–2024) pour la période de référence (baseline) 1991–2020,
+- `METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2` (2025 → aujourd'hui) pour les jours récents.
 
-Heatwaves are detected with the Hobday definition (90th percentile, five-day
-minimum). Satellite resolution does not support claims about a single beach,
-farm or lagoon.
+Les canicules marines sont détectées selon la définition de Hobday (90e centile, minimum de cinq jours). La résolution satellite ne permet pas de tirer des conclusions à l'échelle d'une plage, d'une ferme aquacole ou d'une lagune unique.
 
-## Setup
+## Installation et lancement
 
-Install the JavaScript dependencies and run the app (from the repo root):
+Installez les dépendances JavaScript et lancez l'application (depuis la racine du dépôt) :
 
 ```sh
 npm install
 npm run dev          # http://localhost:5173
 ```
 
-Run the backend in a second terminal (inside your venv) so the front uses live Copernicus data:
+Lancez le backend dans un second terminal (au sein de votre environnement virtuel `venv`) afin que le frontend utilise les données Copernicus en direct :
 
 ```sh
 python -m pip install -r backend/requirements.txt
 python -m uvicorn backend.main:app --app-dir . --reload --port 8000
 ```
 
-The Vite development server proxies `/api` to this backend. The frontend
-requests `/api/mhw?lat=43&lon=6&radius=0.05` and `/api/map?day=YYYY-MM-DD`.
+Le serveur de développement Vite redirige (proxy) `/api` vers ce backend. Le frontend interroge `/api/mhw?lat=43&lon=6&radius=0.05` et `/api/map?day=YYYY-MM-DD`.
 
-**New to the code? Read [ARCHITECTURE.md](ARCHITECTURE.md)** — it maps every
-folder, says which file to edit for common changes, and lists known issues.
+**Nouveau sur le code ? Lisez [ARCHITECTURE.md](ARCHITECTURE.md)** — ce document détaille chaque dossier, indique quel fichier modifier pour les changements courants et liste les problèmes connus.
 
-If the toolbox asks for credentials, authenticate once with
-`copernicusmarine login` before starting the backend. Never put credentials in
-the frontend or commit them to the repository.
+Si la boîte à outils demande des identifiants, authentifiez-vous une fois avec `copernicusmarine login` avant de démarrer le backend. Ne mettez jamais d'identifiants dans le frontend et ne les commitez jamais dans le dépôt.
 
-Useful checks:
+Vérifications utiles :
 
 ```sh
-npm run typecheck   # strict TypeScript
-npm run build       # production bundle in dist/
-npm run test:data   # Python tests (pipeline + Hobday)
+npm run typecheck   # vérification TypeScript stricte
+npm run build       # build de production dans dist/
+npm run test:data   # tests Python (pipeline + Hobday)
 ```
 
-## Hosting
+## Hébergement
 
-`npm run build` produces a static site in `dist/`. It calls `/api/...` on its
-own origin, so serve `dist/` and the FastAPI backend behind the same domain
-(e.g. nginx: `/` → `dist/`, `/api` → uvicorn). If the API lives on another
-domain, set `ALLOWED_ORIGINS=https://your-site` for the backend. Copernicus
-credentials stay on the server (`copernicusmarine login` or environment
-variables), never in the frontend.
+`npm run build` génère un site statique dans `dist/`. Il appelle `/api/...` sur sa propre origine : servez donc `dist/` et le backend FastAPI derrière le même domaine (ex. avec nginx : `/` → `dist/`, `/api` → uvicorn). Si l'API est hébergée sur un autre domaine, définissez `ALLOWED_ORIGINS=https://votre-site` pour le backend. Les identifiants Copernicus restent sur le serveur (`copernicusmarine login` ou variables d'environnement), jamais dans le frontend.
 
-The **Mode expert** button (header) shows the raw telemetry bar, product ids
-and data sources; it is off by default and remembered per browser.
-Educational lesson kits, quizzes, classroom sessions, and kiosk deployment
-remain deferred roadmap work.
+Le bouton **Mode expert** (dans l'en-tête) affiche la barre de télémétrie brute, les identifiants de produits et les sources de données ; il est désactivé par défaut et mémorisé par navigateur. Les kits pédagogiques, les quiz, les sessions de classe et le déploiement en mode kiosque restent des travaux prévus sur la feuille de route ultérieure.
 
-## Copernicus Marine pipeline
+## Pipeline Copernicus Marine
 
-The pipeline uses the official Copernicus Marine `read_dataframe` API and
-combines two products: `C3S-GLO-SST-L4-REP-OBS-SST` (1982-2024) for the
-1991-2020 baseline, and `METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2` (2025-present)
-for the current continuation. It then spatially averages a small box around
-the selected location and detects events with the Hobday definition: 90th
-percentile, 1991-2020 baseline, and a five-day minimum. Configure Copernicus
-credentials with its toolbox login or environment variables, then run:
+Le pipeline utilise l'API officielle `read_dataframe` de Copernicus Marine et combine deux produits : `C3S-GLO-SST-L4-REP-OBS-SST` (1982–2024) pour la période de référence 1991–2020, et `METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2` (2025–présent) pour la suite actuelle. Il calcule ensuite la moyenne spatiale sur une petite boîte autour du lieu sélectionné et détecte les événements avec la définition de Hobday : 90e centile, période de référence 1991–2020 et durée minimale de cinq jours. Configurez vos identifiants Copernicus via le login de la boîte à outils ou par variables d'environnement, puis lancez :
 
 ```sh
 python copernicus_pipeline.py --lat 43.0 --lon 6.0
 ```
 
-This writes `public/data/copernicus_pipeline.json` with both source products,
-method settings, daily records, and detected events (useful as a test fixture). The default location is
-Toulon; use `--lat`, `--lon`, and `--radius` to select another extraction box.
+Cela génère le fichier `public/data/copernicus_pipeline.json` contenant les deux produits sources, les paramètres de la méthode, les relevés quotidiens et les événements détectés (utile comme jeu de données de test). L'emplacement par défaut est Toulon ; utilisez `--lat`, `--lon` et `--radius` pour sélectionner une autre zone d'extraction.
