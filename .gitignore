@@ -1,0 +1,28 @@
+# Node / Vite
+node_modules/
+dist/
+.vite/
+coverage/
+
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Generated data
+cache_data/
+/copernicus_nc_data.json
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db
