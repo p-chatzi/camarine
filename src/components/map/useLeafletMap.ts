@@ -1,7 +1,7 @@
 // Creates the Leaflet map once, with its base tiles and the two layer groups we draw into.
 import L from 'leaflet';
 import { useEffect, useRef, useState, type RefObject } from 'react';
-import { DATA_BOUNDS, FRANCE_BOUNDS, TILE_URLS } from '../../config';
+import { DATA_BOUNDS, FRANCE_BOUNDS, MAX_VIEW_BOUNDS, TILE_URLS } from '../../config';
 import type { TileStyle } from '../../types';
 
 export interface LeafletHandles {
@@ -22,9 +22,20 @@ export const DATA_LATLNG_BOUNDS = L.latLngBounds(
   [DATA_BOUNDS.maxLat, DATA_BOUNDS.maxLon],
 );
 
-/** Furthest zoom-out: the viewport must stay inside the data box (no water without temperature). */
+/** Zone maximale visible / déplaçable : France au centre, moitié de l'Espagne et de l'Italie au plus. */
+export const MAX_VIEW_LATLNG_BOUNDS = L.latLngBounds(
+  [MAX_VIEW_BOUNDS.minLat, MAX_VIEW_BOUNDS.minLon],
+  [MAX_VIEW_BOUNDS.maxLat, MAX_VIEW_BOUNDS.maxLon],
+);
+
+/**
+ * Furthest zoom-out = the home view (all of France + Corsica fits, with a small padding): France
+ * stays the subject and users can't zoom out further. On wide screens the home view already
+ * shows part of Spain and Italy on the sides; everything visible stays inside DATA_BOUNDS
+ * (sea with temperature), except on very narrow portrait screens where France has priority.
+ */
 function minZoomFor(map: L.Map): number {
-  return map.getBoundsZoom(DATA_LATLNG_BOUNDS, true);
+  return map.getBoundsZoom(FRANCE_LATLNG_BOUNDS, false, HOME_PADDING);
 }
 
 const HOME_PADDING = L.point(16, 16);
@@ -39,12 +50,12 @@ export function goHome(map: L.Map, animate: boolean) {
 }
 
 /**
- * Locks the map to the data box: users can zoom out a little beyond the France view and pan
- * around, but can never see an area without computed temperatures.
+ * Locks the map around France: users can zoom out a little beyond the France view and pan
+ * around MAX_VIEW_BOUNDS (itself inside the data box, so every bit of sea has a temperature).
  * Re-applied when the container size changes (first layout, window resize, devtools…).
  */
 function lockToData(map: L.Map, container: HTMLElement): () => void {
-  map.setMaxBounds(DATA_LATLNG_BOUNDS);
+  map.setMaxBounds(MAX_VIEW_LATLNG_BOUNDS);
 
   // Until the user pans/zooms, a resize re-centres on France; after that we leave their view alone.
   let userMoved = false;

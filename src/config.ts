@@ -22,6 +22,20 @@ export const FRANCE_BOUNDS = { minLat: 41.3, maxLat: 51.1, minLon: -5.2, maxLon:
  */
 export const DATA_BOUNDS = { minLat: 36.5, maxLat: 55.5, minLon: -20.0, maxLon: 24.5 };
 
+/**
+ * Zone de déplacement (maxBounds) : la France reste le sujet. Le dézoom maximal est la vue
+ * d'accueil (France + Corse en entier, voir minZoomFor dans useLeafletMap.ts) ; une fois zoomé,
+ * on peut se déplacer jusqu'à ~1,5° autour de la France. Contenu dans DATA_BOUNDS.
+ */
+export const MAX_VIEW_BOUNDS = { minLat: 39.5, maxLat: 52.6, minLon: -9.0, maxLon: 13.5 };
+
+/** Contour de la France métropolitaine + Corse (IGN Admin Express, simplifié). Servi depuis public/. */
+export const FRANCE_OUTLINE_URL = '/geo/france-metropole.geojson';
+
+/** Sous ce zoom, si beaucoup d'espèces sont affichées, les étiquettes ne s'affichent qu'au survol. */
+export const DENSE_LABELS_MIN_ZOOM = 8.5;
+export const DENSE_LABELS_SPECIES_COUNT = 12;
+
 /** Size of one /api/map pixel in degrees. */
 export const MAP_CELL_RESOLUTION = 0.05;
 

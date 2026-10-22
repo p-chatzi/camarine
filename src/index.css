@@ -9,3 +9,12 @@ body,
 body {
   margin: 0;
 }
+
+/* Species pin labels in dense mode (many pins at low zoom): show on hover / when selected only. */
+.camarine-labels-compact .camarine-pin-label {
+  display: none;
+}
+.camarine-labels-compact .custom-species-leaflet-pin:hover .camarine-pin-label,
+.camarine-labels-compact .camarine-pin-label.is-selected {
+  display: block;
+}

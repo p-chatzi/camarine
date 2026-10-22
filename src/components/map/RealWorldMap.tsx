@@ -3,6 +3,7 @@
 import 'leaflet/dist/leaflet.css';
 import { useRef } from 'react';
 import type { Basin, ColorMode, MapCell, MapDataType, PipelineRecord, SpeciesItem, Telemetry, TileStyle } from '../../types';
+import { useFranceOutline } from './useFranceOutline';
 import { useLeafletMap } from './useLeafletMap';
 import { useMapCamera } from './useMapCamera';
 import { useSatelliteRaster } from './useSatelliteRaster';
@@ -32,6 +33,7 @@ export function RealWorldMap(props: Props) {
   const leaflet = useLeafletMap(containerRef, props.tileStyle, props.onClearSelection);
 
   useSatelliteRaster(leaflet?.map, props.showSatelliteRaster);
+  useFranceOutline(leaflet?.map);
   useMapCamera(leaflet?.map, props.focusedBasin, props.selectedSpecies);
   useThermalLayer({
     map: leaflet?.map,
@@ -43,7 +45,7 @@ export function RealWorldMap(props: Props) {
     telemetry: props.telemetry,
     records: props.records,
   });
-  useSpeciesMarkers(leaflet?.markersLayer, props.species, props.selectedSpecies, props.onSelectSpecies);
+  useSpeciesMarkers(leaflet?.map, leaflet?.markersLayer, props.species, props.selectedSpecies, props.onSelectSpecies);
 
   return (
     <div className="relative w-full h-full">

@@ -1,7 +1,15 @@
 // Species pins: red "−" for declining species, green "+" for proliferating ones.
+// When many pins are shown (expert mode), labels only appear on hover below DENSE_LABELS_MIN_ZOOM.
 import L from 'leaflet';
 import { useEffect, useRef } from 'react';
+import { DENSE_LABELS_MIN_ZOOM, DENSE_LABELS_SPECIES_COUNT } from '../../config';
 import type { SpeciesItem } from '../../types';
+
+const COMPACT_CLASS = 'camarine-labels-compact';
+
+function escapeHtml(text: string): string {
+  return text.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+}
 
 function pinHtml(sp: SpeciesItem, isSelected: boolean): string {
   const isDecline = sp.trend === 'decline';
@@ -21,19 +29,20 @@ function pinHtml(sp: SpeciesItem, isSelected: boolean): string {
             color: #ffffff; font-weight: 900; font-size: ${isSelected ? '18px' : '15px'}; line-height: 1;
             transition: all 0.2s ease;
           ">${sign}</div>
-          <div style="
+          <div class="camarine-pin-label${isSelected ? ' is-selected' : ''}" style="
             margin-top: 5px; padding: 2px 8px; border-radius: 9999px;
             background: ${isSelected ? '#0f172a' : 'rgba(255, 255, 255, 0.96)'};
             color: ${isSelected ? '#ffffff' : '#0f172a'};
             border: 1.5px solid ${isSelected ? badgeColor : borderColor};
             font-size: 11px; font-weight: 700; white-space: nowrap;
             box-shadow: 0 2px 8px rgba(15, 23, 42, 0.14);
-          ">${sp.name}</div>
+          ">${escapeHtml(sp.name)}</div>
         </div>
       `;
 }
 
 export function useSpeciesMarkers(
+  map: L.Map | undefined,
   layer: L.LayerGroup | undefined,
   species: SpeciesItem[],
   selected: SpeciesItem | null,
@@ -52,12 +61,26 @@ export function useSpeciesMarkers(
         iconSize: [0, 0],
         iconAnchor: [0, 0],
       });
-      const marker = L.marker(sp.coords, { icon }).addTo(layer);
-      marker.setZIndexOffset(1000);
+      const marker = L.marker(sp.coords, { icon, title: `${sp.name} (${sp.scientificName})`, alt: sp.name }).addTo(layer);
+      marker.setZIndexOffset(selected?.id === sp.id ? 2000 : 1000);
       marker.on('click', (e: L.LeafletMouseEvent) => {
         e.originalEvent?.stopPropagation(); // don't trigger the map's "clear selection" click
         onSelectRef.current(sp);
       });
     }
   }, [layer, species, selected]);
+
+  // Dense mode: hide labels at low zoom (hover or selection still shows them, see index.css).
+  const isDense = species.length > DENSE_LABELS_SPECIES_COUNT;
+  useEffect(() => {
+    if (!map) return;
+    const container = map.getContainer();
+    const apply = () => container.classList.toggle(COMPACT_CLASS, isDense && map.getZoom() < DENSE_LABELS_MIN_ZOOM);
+    apply();
+    map.on('zoomend', apply);
+    return () => {
+      map.off('zoomend', apply);
+      container.classList.remove(COMPACT_CLASS);
+    };
+  }, [map, isDense]);
 }
