@@ -15,6 +15,73 @@ body {
   display: none;
 }
 .camarine-labels-compact .custom-species-leaflet-pin:hover .camarine-pin-label,
+.camarine-labels-compact .custom-species-leaflet-pin:focus-visible .camarine-pin-label,
 .camarine-labels-compact .camarine-pin-label.is-selected {
   display: block;
+}
+
+/* ---- Keyboard: one clearly visible focus ring everywhere (also on elements styled outline-none) */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid #0369a1 !important;
+  outline-offset: 2px;
+}
+.leaflet-container:focus-visible {
+  outline-offset: -3px;
+}
+/* Species pins: the Leaflet icon box is 0×0, so the ring goes on the round badge itself. */
+.custom-species-leaflet-pin:focus-visible {
+  outline: none !important;
+}
+.custom-species-leaflet-pin:focus-visible > div > div:first-child {
+  outline: 3px solid #0369a1;
+  outline-offset: 3px;
+}
+
+/* ---- Touch screens: main controls at least 44×44 px (WCAG 2.5.5) */
+@media (pointer: coarse) {
+  .tap {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .leaflet-container.leaflet-touch .leaflet-bar a { /* more specific than leaflet.css, loaded after us */
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+    font-size: 22px;
+  }
+}
+
+/* ---- Map credits on one line (hover / tap / keyboard focus to read them in full), so they never
+   push into the legend, whatever the width left by the species card. */
+.leaflet-container .leaflet-control-attribution {
+  max-width: calc(100vw - 16px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.leaflet-container .leaflet-control-attribution:hover,
+.leaflet-container .leaflet-control-attribution:focus-within {
+  white-space: normal;
+}
+@media (min-width: 640px) {
+  .camarine-card-open .leaflet-control-attribution {
+    max-width: calc(100vw - 470px);
+  }
+}
+
+/* ---- Species card open: keep the zoom buttons usable and the legend readable */
+@media (min-width: 1024px) {
+  .camarine-card-open .leaflet-bottom.leaflet-right {
+    right: 452px; /* card width 420 px + margins */
+  }
+}
+@media (max-width: 1023px) {
+  .camarine-card-open .leaflet-control-zoom {
+    display: none; /* the card covers that corner; pinch / wheel zoom still work */
+  }
+}
+@media (min-width: 640px) {
+  .camarine-card-open .camarine-legend {
+    max-width: calc(100% - 470px); /* wraps instead of sliding under the card */
+  }
 }

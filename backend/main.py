@@ -12,9 +12,10 @@ from datetime import date
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, StrictStr
 
 from . import suggestion_service
 from .map_service import get_map_payload
@@ -58,23 +59,45 @@ def marine_heatwaves(
 
 @app.get("/api/map")
 def current_map(
-    min_lon: float = Query(-20.0, ge=-180, le=180),
-    max_lon: float = Query(24.5, ge=-180, le=180),
-    min_lat: float = Query(36.5, ge=-90, le=90),
-    max_lat: float = Query(55.5, ge=-90, le=90),
+    # Defaults = DATA_BOUNDS in src/config.ts (the frontend always sends them explicitly).
+    min_lon: float = Query(-17.0, ge=-180, le=180),
+    max_lon: float = Query(23.0, ge=-180, le=180),
+    min_lat: float = Query(39.0, ge=-90, le=90),
+    max_lat: float = Query(53.5, ge=-90, le=90),
     day: str | None = None,
 ) -> dict[str, Any]:
     """SST pixels over a bounding box for one day."""
     return get_map_payload((min_lon, max_lon, min_lat, max_lat), day)
 
 
+SUGGESTIONS_PATH = "/api/suggestions"
+
+
+@app.middleware("http")
+async def limit_suggestion_body(request: Request, call_next):
+    """Reject oversized or unsized bodies on the public suggestion form BEFORE they are read/parsed."""
+    if request.url.path == SUGGESTIONS_PATH and request.method == "POST":
+        length = request.headers.get("content-length")
+        if length is None or not length.isdigit():
+            return JSONResponse({"detail": "Content-Length requis."}, status_code=411)
+        if int(length) > suggestion_service.MAX_BODY_BYTES:
+            return JSONResponse({"detail": "Suggestion trop longue."}, status_code=413)
+        if not request.headers.get("content-type", "").startswith("application/json"):
+            return JSONResponse({"detail": "JSON attendu."}, status_code=415)
+    return await call_next(request)
+
+
 class SpeciesSuggestionIn(BaseModel):
-    species_name: str = Field(min_length=2, max_length=suggestion_service.NAME_MAX)
-    message: str = Field(default="", max_length=suggestion_service.MESSAGE_MAX)
-    website: str = Field(default="", max_length=200)  # honeypot: humans leave it empty
+    """Strict schema: strings only (no type coercion), unknown fields rejected."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    species_name: StrictStr = Field(min_length=2, max_length=suggestion_service.NAME_MAX)
+    message: StrictStr = Field(default="", max_length=suggestion_service.MESSAGE_MAX)
+    website: StrictStr = Field(default="", max_length=200)  # honeypot: humans leave it empty
 
 
-@app.post("/api/suggestions", status_code=201)
+@app.post(SUGGESTIONS_PATH, status_code=201)
 def suggest_species(payload: SpeciesSuggestionIn, request: Request) -> dict[str, str]:
     """Stores a "missing species" suggestion for review (see suggestion_service.py)."""
     if payload.website:
@@ -84,7 +107,9 @@ def suggest_species(payload: SpeciesSuggestionIn, request: Request) -> dict[str,
         raise HTTPException(status_code=429, detail="Trop de suggestions, réessayez plus tard.")
     try:
         record = suggestion_service.build_record(payload.species_name, payload.message)
+        suggestion_service.append_record(record)
     except suggestion_service.SuggestionError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
-    suggestion_service.append_record(record)
+    except suggestion_service.StorageFullError as exc:
+        raise HTTPException(status_code=503, detail="Les suggestions sont temporairement fermées.") from exc
     return {"status": "ok"}

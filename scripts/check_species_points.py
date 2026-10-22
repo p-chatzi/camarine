@@ -21,6 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SPECIES_FILE = ROOT / "src" / "data" / "species.ts"
 OUTLINE_FILE = ROOT / "public" / "geo" / "france-metropole.geojson"
+PELAGOS_FILE = ROOT / "public" / "geo" / "pelagos.geojson"
 
 LAGOONS = {"moules-thau"}  # étang de Thau
 FAR_KM = 40  # au-delà : "au large" (autorisé, simplement signalé)
@@ -36,8 +37,8 @@ def load_species() -> list[tuple[str, float, float]]:
     return [(i, float(lat), float(lon)) for i, (lat, lon) in zip(ids, coords)]
 
 
-def load_polygons() -> list:
-    geo = json.loads(OUTLINE_FILE.read_text(encoding="utf-8"))
+def load_polygons(path: Path = OUTLINE_FILE) -> list:
+    geo = json.loads(path.read_text(encoding="utf-8"))
     geom = geo["features"][0]["geometry"]
     return geom["coordinates"] if geom["type"] == "MultiPolygon" else [geom["coordinates"]]
 
@@ -81,6 +82,10 @@ def main() -> int:
             d = km(lat_a, lon_a, lat_b, lon_b)
             if d < TOO_CLOSE_KM:
                 print(f"  ⚠ points proches : {a} ↔ {b} ({d:.1f} km)")
+    if PELAGOS_FILE.exists():
+        pelagos = load_polygons(PELAGOS_FILE)
+        inside = [sid for sid, lat, lon in species if on_land(lon, lat, pelagos)]  # same point-in-polygon test
+        print(f"\nDans le Sanctuaire Pelagos ({len(inside)}) : {', '.join(inside)}")
     print(f"\n{len(species)} espèces, {errors} sur terre.")
     return 1 if errors else 0
 

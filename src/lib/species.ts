@@ -1,10 +1,22 @@
 // Pure helpers around the species list: visibility per mode, search, labels. No React.
 import { SPECIES_DATA } from '../data/species';
-import type { HeatEvidence, IucnCategory, Kingdom, SpeciesItem } from '../types';
+import type { GeoJsonObject } from 'geojson';
+import type { BasinFilter, HeatEvidence, IucnCategory, Kingdom, SpeciesItem } from '../types';
+import { containsPoint } from './geo';
 
 /** Species visible in a given mode: everything in expert mode, only 'public' species otherwise. */
 export function speciesForMode(expert: boolean): SpeciesItem[] {
   return expert ? SPECIES_DATA : SPECIES_DATA.filter((sp) => sp.audience === 'public');
+}
+
+/**
+ * Does a species pass the "Façades" filter? Basins compare the species' basin; a marine zone
+ * (Pelagos) tests whether the species' point lies inside the zone (false while it is loading).
+ */
+export function matchesFacade(sp: SpeciesItem, filter: BasinFilter, zone: GeoJsonObject | null): boolean {
+  if (filter === 'Tous') return true;
+  if (filter === 'Pelagos') return zone !== null && containsPoint(zone, sp.coords);
+  return sp.basin === filter;
 }
 
 /** Lower-case, accent-free text so "eponge" matches "Éponge". */

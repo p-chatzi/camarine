@@ -43,10 +43,13 @@ async function commonsImage(fileName: string, alt: string, signal?: AbortSignal)
   );
   const info = data?.query?.pages?.[0]?.imageinfo?.[0];
   if (!info) return null;
+  // Only accept images served by Wikimedia's own upload host over HTTPS.
+  const src: unknown = info.thumburl ?? info.url;
+  if (typeof src !== 'string' || !src.startsWith('https://upload.wikimedia.org/')) return null;
   const meta = info.extmetadata ?? {};
   return {
     title: fileName.replace(/_/g, ' '),
-    src: info.thumburl ?? info.url,
+    src,
     alt,
     artist: htmlToText(meta.Artist?.value) || 'Wikimedia Commons',
     license: htmlToText(meta.LicenseShortName?.value) || 'voir Wikimedia Commons',

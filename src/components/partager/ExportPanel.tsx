@@ -15,15 +15,15 @@ interface Props {
 
 function ModeToggle({ settings }: { settings: MapSettings }) {
   const btn = (active: boolean) =>
-    `px-2.5 py-1 rounded-md text-[10px] font-bold transition-all ${active ? 'bg-sky-600 text-white' : 'text-slate-600 hover:text-slate-900'}`;
+    `tap min-h-7 px-3 py-1 rounded-md text-[11px] font-bold transition-all ${active ? 'bg-sky-600 text-white' : 'text-slate-600 hover:text-slate-900'}`;
   return (
     <div className="flex items-center justify-between">
       <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Mode d'export</span>
-      <div className="flex bg-white rounded-lg p-0.5 border border-sky-200">
-        <button onClick={() => settings.setColorMode('daily')} className={btn(settings.colorMode === 'daily')}>
+      <div role="group" aria-label="Mode d'export" className="flex bg-white rounded-lg p-0.5 border border-sky-200">
+        <button onClick={() => settings.setColorMode('daily')} aria-pressed={settings.colorMode === 'daily'} className={btn(settings.colorMode === 'daily')}>
           Jour J
         </button>
-        <button onClick={() => settings.setColorMode('average')} className={btn(settings.colorMode === 'average')}>
+        <button onClick={() => settings.setColorMode('average')} aria-pressed={settings.colorMode === 'average'} className={btn(settings.colorMode === 'average')}>
           Période
         </button>
       </div>
@@ -39,8 +39,9 @@ function DayPicker({ data }: { data: CopernicusData }) {
   return (
     <div className="space-y-2">
       <div className="space-y-1">
-        <label className="text-[10px] font-semibold text-slate-500">Date précise (Jour J) :</label>
+        <label htmlFor="export-day" className="text-[10px] font-semibold text-slate-500">Date précise (Jour J) :</label>
         <input
+          id="export-day"
           type="date"
           min={data.startDate}
           max={data.endDate}
@@ -49,13 +50,13 @@ function DayPicker({ data }: { data: CopernicusData }) {
             setDraft(e.target.value);
             data.selectExistingDate(e.target.value);
           }}
-          className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-sky-300 text-sky-900 font-bold text-xs outline-none cursor-pointer"
+          className="tap w-full px-2.5 py-1.5 rounded-lg bg-white border border-sky-300 text-sky-900 font-bold text-xs outline-none cursor-pointer"
         />
       </div>
       <button
         type="button"
         onClick={() => data.selectDate(draft)}
-        className="w-full py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer"
+        className="tap w-full py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer"
       >
         Valider la date
       </button>
@@ -65,22 +66,22 @@ function DayPicker({ data }: { data: CopernicusData }) {
 
 function PeriodPicker({ data }: { data: CopernicusData }) {
   const inputClass =
-    'w-full px-2 py-1 border border-slate-200 rounded-md text-[11px] font-bold text-slate-800 outline-none focus:border-sky-500 cursor-pointer bg-white';
+    'tap w-full px-2 py-1 border border-slate-200 rounded-md text-[11px] font-bold text-slate-800 outline-none focus:border-sky-500 cursor-pointer bg-white';
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-1.5">
         <div className="flex-1 space-y-1">
-          <label className="text-[10px] font-semibold text-slate-500">Du :</label>
-          <input type="date" value={data.startDate} onChange={(e) => data.setStartDate(e.target.value)} className={inputClass} />
+          <label htmlFor="export-start" className="text-[10px] font-semibold text-slate-500">Du :</label>
+          <input id="export-start" type="date" value={data.startDate} onChange={(e) => data.setStartDate(e.target.value)} className={inputClass} />
         </div>
         <div className="flex-1 space-y-1">
-          <label className="text-[10px] font-semibold text-slate-500">Au :</label>
-          <input type="date" value={data.endDate} onChange={(e) => data.setEndDate(e.target.value)} className={inputClass} />
+          <label htmlFor="export-end" className="text-[10px] font-semibold text-slate-500">Au :</label>
+          <input id="export-end" type="date" value={data.endDate} onChange={(e) => data.setEndDate(e.target.value)} className={inputClass} />
         </div>
       </div>
       <button
         onClick={data.reload}
-        className="w-full py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
+        className="tap w-full py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
       >
         Actualiser les données
       </button>
@@ -102,7 +103,7 @@ export function ExportPanel({ data, settings, onDownload, onPreview }: Props) {
         <div className="space-y-2.5">
           <button
             onClick={() => onDownload('csv')}
-            className="w-full px-4 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 font-bold text-xs flex items-center justify-between transition-colors cursor-pointer"
+            className="tap w-full px-4 py-2.5 rounded-xl bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 font-bold text-xs flex items-center justify-between transition-colors cursor-pointer"
           >
             <span className="flex items-center gap-2">
               <FileSpreadsheet className="w-4 h-4" /> Matrice .CSV
@@ -111,7 +112,7 @@ export function ExportPanel({ data, settings, onDownload, onPreview }: Props) {
           </button>
           <button
             onClick={() => onDownload('json')}
-            className="w-full px-4 py-2.5 rounded-xl bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 font-bold text-xs flex items-center justify-between transition-colors cursor-pointer"
+            className="tap w-full px-4 py-2.5 rounded-xl bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 font-bold text-xs flex items-center justify-between transition-colors cursor-pointer"
           >
             <span className="flex items-center gap-2">
               <FileJson className="w-4 h-4" /> Payload .JSON
@@ -120,7 +121,7 @@ export function ExportPanel({ data, settings, onDownload, onPreview }: Props) {
           </button>
           <button
             onClick={onPreview}
-            className="w-full px-4 py-2.5 rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 font-bold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
+            className="tap w-full px-4 py-2.5 rounded-xl bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200 font-bold text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer"
           >
             <Eye className="w-4 h-4" /> Aperçu brut
           </button>

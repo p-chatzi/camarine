@@ -2,7 +2,7 @@
 // When many pins are shown (expert mode), labels only appear on hover below DENSE_LABELS_MIN_ZOOM.
 import L from 'leaflet';
 import { useEffect, useRef } from 'react';
-import { DENSE_LABELS_MIN_ZOOM, DENSE_LABELS_SPECIES_COUNT } from '../../config';
+import { DENSE_LABELS_MIN_ZOOM, DENSE_LABELS_NARROW_MAP_PX, DENSE_LABELS_SPECIES_COUNT } from '../../config';
 import type { SpeciesItem } from '../../types';
 
 const COMPACT_CLASS = 'camarine-labels-compact';
@@ -67,20 +67,35 @@ export function useSpeciesMarkers(
         e.originalEvent?.stopPropagation(); // don't trigger the map's "clear selection" click
         onSelectRef.current(sp);
       });
+      // Keyboard: Leaflet makes the pin focusable (role=button) but Enter/Space did not open it.
+      const el = marker.getElement();
+      if (el) {
+        el.setAttribute('aria-label', `${sp.name} (${sp.scientificName}), ${sp.trend === 'decline' ? 'en déclin' : 'favorisée par la chaleur'} — ouvrir la fiche`);
+        el.addEventListener('keydown', (ev) => {
+          if (ev.key !== 'Enter' && ev.key !== ' ') return;
+          ev.preventDefault();
+          ev.stopPropagation();
+          onSelectRef.current(sp);
+        });
+      }
     }
   }, [layer, species, selected]);
 
-  // Dense mode: hide labels at low zoom (hover or selection still shows them, see index.css).
-  const isDense = species.length > DENSE_LABELS_SPECIES_COUNT;
+  // Dense mode: hide labels at low zoom (hover, keyboard focus or selection still shows them, see
+  // index.css). Dense = many pins, or a narrow map (phones) where even a few labels overlap.
+  const manyPins = species.length > DENSE_LABELS_SPECIES_COUNT;
   useEffect(() => {
     if (!map) return;
     const container = map.getContainer();
-    const apply = () => container.classList.toggle(COMPACT_CLASS, isDense && map.getZoom() < DENSE_LABELS_MIN_ZOOM);
+    const apply = () => {
+      const dense = manyPins || map.getSize().x < DENSE_LABELS_NARROW_MAP_PX;
+      container.classList.toggle(COMPACT_CLASS, dense && map.getZoom() < DENSE_LABELS_MIN_ZOOM);
+    };
     apply();
-    map.on('zoomend', apply);
+    map.on('zoomend resize', apply);
     return () => {
-      map.off('zoomend', apply);
+      map.off('zoomend resize', apply);
       container.classList.remove(COMPACT_CLASS);
     };
-  }, [map, isDense]);
+  }, [map, manyPins]);
 }

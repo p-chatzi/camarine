@@ -10,7 +10,7 @@ export function SuggestionForm({ form }: { form: SpeciesSuggestionForm }) {
           <CheckCircle2 className="w-4 h-4" /> Merci, suggestion envoyée !
         </p>
         <p className="text-[11px] text-emerald-800">L’équipe Camarine la relira avant de l’ajouter à la carte.</p>
-        <button onClick={form.reset} className="text-[11px] font-semibold text-emerald-800 underline underline-offset-2">
+        <button onClick={form.reset} className="tap text-[11px] font-semibold text-emerald-800 underline underline-offset-2">
           Suggérer une autre espèce
         </button>
       </div>
@@ -38,7 +38,7 @@ export function SuggestionForm({ form }: { form: SpeciesSuggestionForm }) {
           value={form.speciesName}
           onChange={(e) => form.setSpeciesName(e.target.value)}
           placeholder="ex. Oursin violet, Paracentrotus lividus"
-          className="w-full bg-white border border-sky-200 rounded-lg px-2.5 py-1.5 text-xs outline-none focus:border-sky-500"
+          className="tap w-full bg-white border border-sky-200 rounded-lg px-2.5 py-1.5 text-xs outline-none focus:border-sky-500"
         />
       </label>
       <label className="block space-y-1">
@@ -70,7 +70,7 @@ export function SuggestionForm({ form }: { form: SpeciesSuggestionForm }) {
       <button
         type="submit"
         disabled={!form.canSubmit}
-        className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-sky-700 hover:bg-sky-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xs font-bold transition-colors"
+        className="tap w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-sky-700 hover:bg-sky-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white text-xs font-bold transition-colors"
       >
         <Send className="w-3.5 h-3.5" /> {form.status === 'sending' ? 'Envoi…' : 'Envoyer la suggestion'}
       </button>

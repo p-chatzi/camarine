@@ -1,16 +1,6 @@
 // Map filters, layer toggles and expert mode. Kept in App so they survive switching tabs.
-import { useEffect, useState } from 'react';
-import type { BasinFilter, ColorMode, MapDataType, TileStyle, TrendFilter } from '../types';
-
-const EXPERT_KEY = 'camarine.expert';
-
-function readExpert(): boolean {
-  try {
-    return localStorage.getItem(EXPERT_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
+import { useState } from 'react';
+import type { BasinFilter, ColorMode, MapDataType, MapFocus, TrendFilter } from '../types';
 
 export function useMapSettings() {
   const [basin, setBasin] = useState<BasinFilter>('Tous');
@@ -18,18 +8,11 @@ export function useMapSettings() {
   const [showThermalOverlay, setShowThermalOverlay] = useState(true);
   const [showSatelliteRaster, setShowSatelliteRaster] = useState(false);
   const [showSourceInfo, setShowSourceInfo] = useState(false);
-  /** Expert mode: shows telemetry pill, data sources and product ids. Remembered per browser. */
-  const [expert, setExpert] = useState(readExpert);
-  useEffect(() => {
-    try {
-      localStorage.setItem(EXPERT_KEY, expert ? '1' : '0');
-    } catch {
-      /* storage unavailable: ignore */
-    }
-  }, [expert]);
+  /** Expert mode: telemetry pill, data sources, species catalogue. Always OFF when the page loads. */
+  const [expert, setExpert] = useState(false);
   const [colorMode, setColorMode] = useState<ColorMode>('daily');
-  const [dataType, setDataType] = useState<MapDataType>('sst');
-  const [tileStyle, setTileStyle] = useState<TileStyle>('voyager');
+  /** Default view = "Mode Impact Biologique" (SST pixels + species pins). */
+  const [dataType, setDataType] = useState<MapDataType>('impact');
 
   return {
     basin, setBasin,
@@ -40,9 +23,8 @@ export function useMapSettings() {
     expert, toggleExpert: () => setExpert((e) => !e),
     colorMode, setColorMode,
     dataType, setDataType,
-    tileStyle, setTileStyle,
-    /** Map zooms on this basin; null = whole of France. */
-    focusedBasin: basin === 'Tous' ? null : basin,
+    /** Map zooms on this basin or marine zone; null = whole of France. */
+    focusedBasin: (basin === 'Tous' ? null : basin) as MapFocus,
     activeFiltersCount: (basin !== 'Tous' ? 1 : 0) + (trend !== 'Tous' ? 1 : 0),
   };
 }

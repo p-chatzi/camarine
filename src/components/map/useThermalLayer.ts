@@ -200,11 +200,23 @@ export function useThermalLayer({ map, layer, visible, cells, colorMode, dataTyp
       if (!map.hasLayer(tooltip)) map.openTooltip(tooltip);
     };
     const onOut = () => map.closeTooltip(tooltip);
+    // Touch screens have no hover: a tap on the sea shows the pixel value for a few seconds.
+    // (Browsers emit a synthetic "mouseout" right after a tap, so it must not close the tooltip there.)
+    const isTouch = window.matchMedia?.('(hover: none)').matches ?? false;
     map.on('mousemove', onMove);
-    map.on('mouseout', onOut);
+    if (!isTouch) map.on('mouseout', onOut);
+    let hideTimer: number | undefined;
+    const onTap = (e: L.LeafletMouseEvent) => {
+      onMove(e);
+      window.clearTimeout(hideTimer);
+      hideTimer = window.setTimeout(() => map.closeTooltip(tooltip), 4000);
+    };
+    if (isTouch) map.on('click', onTap);
     return () => {
       map.off('mousemove', onMove);
-      map.off('mouseout', onOut);
+      if (!isTouch) map.off('mouseout', onOut);
+      if (isTouch) map.off('click', onTap);
+      window.clearTimeout(hideTimer);
       map.closeTooltip(tooltip);
     };
   }, [map, layer, visible, cells, colorMode, dataType, telemetry, records]);

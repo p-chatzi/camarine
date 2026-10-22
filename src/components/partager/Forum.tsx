@@ -5,7 +5,7 @@ import type { ForumState } from '../../hooks/useForum';
 /** State comes from App so messages survive switching tabs. */
 export function Forum({ forum }: { forum: ForumState }) {
   return (
-    <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-0 shadow-sm flex flex-col h-[600px]">
+    <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-0 shadow-sm flex flex-col h-[min(600px,75dvh)]">
       <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 rounded-t-2xl">
         <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
           <Radio className="w-4 h-4 text-indigo-600" /> Forum d'Analyse Participative
@@ -42,12 +42,13 @@ export function Forum({ forum }: { forum: ForumState }) {
             value={forum.input}
             onChange={(e) => forum.setInput(e.target.value)}
             placeholder="Partagez une observation ou un relevé terrain..."
-            className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-indigo-400 focus:bg-white transition-colors"
+            aria-label="Votre message"
+            className="tap flex-1 min-w-0 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs outline-none focus:border-indigo-400 focus:bg-white transition-colors"
           />
           <button
             type="submit"
             disabled={!forum.input.trim()}
-            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold transition-colors shadow-sm"
+            className="tap px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold transition-colors shadow-sm"
           >
             Envoyer
           </button>

@@ -3,7 +3,7 @@ export function MapLegend() {
   return (
     <div
       onClick={(e) => e.stopPropagation()}
-      className="absolute bottom-3 left-4 z-30 bg-white/95 backdrop-blur-md border border-sky-200 rounded-xl px-3 py-2 text-[11px] flex flex-wrap items-center gap-3 shadow-md"
+      className="camarine-legend absolute bottom-7 sm:bottom-8 left-3 sm:left-4 z-30 max-w-[calc(100%-5rem)] bg-white/95 backdrop-blur-md border border-sky-200 rounded-xl px-3 py-2 text-[11px] flex flex-wrap items-center gap-3 shadow-md"
     >
       <div className="flex items-center gap-1.5">
         <span className="w-4 h-4 rounded-full bg-rose-600 text-white font-bold flex items-center justify-center text-xs">−</span>

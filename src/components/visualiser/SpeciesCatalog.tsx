@@ -72,12 +72,13 @@ export function SpeciesCatalog({ species, selectedId, isOpen, onToggle, onSelect
     // Mobile: below the "Façades" button (same row otherwise) and above the legend.
     <div
       onClick={(e) => e.stopPropagation()}
-      className="absolute top-[4.25rem] sm:top-4 right-4 z-30 flex flex-col items-end gap-2 max-h-[calc(100%-8rem)] sm:max-h-[calc(100%-2rem)]"
+      className="absolute top-[4.25rem] sm:top-4 right-3 sm:right-4 z-30 flex flex-col items-end gap-2 max-h-[calc(100%-8rem)] sm:max-h-[calc(100%-2rem)]"
     >
       <button
         onClick={onToggle}
         aria-expanded={isOpen}
-        className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold text-xs shadow-lg border transition-all ${
+        aria-controls="species-catalogue"
+        className={`tap flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold text-xs shadow-lg border transition-all ${
           isOpen ? 'bg-slate-800 text-white border-slate-900' : 'bg-white/95 hover:bg-white text-slate-800 border-sky-200'
         }`}
       >
@@ -87,20 +88,21 @@ export function SpeciesCatalog({ species, selectedId, isOpen, onToggle, onSelect
       </button>
 
       {isOpen && (
-        <div className="w-[calc(100vw-2rem)] sm:w-96 min-h-0 flex flex-col bg-white/95 backdrop-blur-xl border border-sky-200 rounded-2xl shadow-2xl shadow-sky-950/15 overflow-hidden">
+        <div id="species-catalogue" className="w-[calc(100vw-1.5rem)] sm:w-96 min-h-0 flex flex-col bg-white/95 backdrop-blur-xl border border-sky-200 rounded-2xl shadow-2xl shadow-sky-950/15 overflow-hidden">
           <div className="p-3 border-b border-sky-100 space-y-2 shrink-0">
             <label className="relative block">
               <span className="sr-only">Rechercher une espèce</span>
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
               <input
                 type="search"
+                maxLength={80}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Rechercher (nom commun ou scientifique)"
-                className="w-full bg-sky-50/70 border border-sky-200 rounded-xl pl-8 pr-8 py-2 text-xs outline-none focus:border-sky-500 focus:bg-white"
+                className="tap w-full bg-sky-50/70 border border-sky-200 rounded-xl pl-8 pr-8 py-2 text-xs outline-none focus:border-sky-500 focus:bg-white"
               />
               {query && (
-                <button onClick={() => setQuery('')} aria-label="Effacer la recherche" className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700">
+                <button onClick={() => setQuery('')} aria-label="Effacer la recherche" className="tap absolute right-0.5 top-1/2 -translate-y-1/2 p-1.5 flex items-center justify-center text-slate-400 hover:text-slate-700">
                   <X className="w-3.5 h-3.5" />
                 </button>
               )}

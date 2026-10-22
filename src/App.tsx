@@ -7,12 +7,10 @@ import { LoadingScreen } from './components/layout/LoadingScreen';
 import { ComprendreView } from './components/comprendre/ComprendreView';
 import { PartagerView } from './components/partager/PartagerView';
 import { VisualiserView } from './components/visualiser/VisualiserView';
-import { useAudio } from './hooks/useAudio';
 import { useCopernicusData } from './hooks/useCopernicusData';
 import { useForum } from './hooks/useForum';
 import { useMapCells } from './hooks/useMapCells';
 import { useMapSettings } from './hooks/useMapSettings';
-import { useMuseumTour } from './hooks/useMuseumTour';
 import type { ExportContext } from './lib/export';
 import { getSpeciesSst } from './lib/speciesSst';
 import type { AppMode, SpeciesItem } from './types';
@@ -24,21 +22,10 @@ export default function App() {
   const data = useCopernicusData();
   const map = useMapCells(data.selectedDate);
   const settings = useMapSettings();
-  const audio = useAudio();
   const forum = useForum();
-
-  /** Clicking a pin (or the museum "next" button). Narrates in museum mode. */
-  const selectSpecies = (sp: SpeciesItem) => {
-    setSelectedSpecies(sp);
-    if (mode === 'museum' && audio.voiceOn) audio.speak(`${sp.name}. ${sp.narrationText}`);
-  };
-
-  const tour = useMuseumTour({ mode, audio, setBasin: settings.setBasin, setSelectedSpecies, selectSpecies });
 
   const changeMode = (next: AppMode) => {
     setMode(next);
-    tour.stop();
-    audio.stopSpeech();
     setSelectedSpecies(null);
   };
 
@@ -55,21 +42,18 @@ export default function App() {
   };
 
   return (
-    <div className="h-screen w-screen bg-sky-50 text-slate-800 font-sans selection:bg-sky-500 selection:text-white flex flex-col overflow-hidden">
-      <Header mode={mode} onChangeMode={changeMode} audio={audio} expert={settings.expert} onToggleExpert={settings.toggleExpert} />
+    <div className="h-dvh w-full bg-sky-50 text-slate-800 font-sans selection:bg-sky-500 selection:text-white flex flex-col overflow-hidden">
+      <Header mode={mode} onChangeMode={changeMode} expert={settings.expert} onToggleExpert={settings.toggleExpert} />
 
       {mode === 'visualiser' && (
         <VisualiserView
-          mode={mode}
           data={data}
           settings={settings}
           cells={map.cells}
           isMapLoading={map.isLoading}
           selectedSpecies={selectedSpecies}
-          onSelectSpecies={selectSpecies}
+          onSelectSpecies={setSelectedSpecies}
           onClearSpecies={() => setSelectedSpecies(null)}
-          onSpeak={audio.speak}
-          tour={tour}
         />
       )}
       {mode === 'comprendre' && <ComprendreView data={data} cellCount={map.cells.length} />}

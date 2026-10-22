@@ -1,8 +1,7 @@
 // Creates the Leaflet map once, with its base tiles and the two layer groups we draw into.
 import L from 'leaflet';
 import { useEffect, useRef, useState, type RefObject } from 'react';
-import { DATA_BOUNDS, FRANCE_BOUNDS, MAX_VIEW_BOUNDS, TILE_URLS } from '../../config';
-import type { TileStyle } from '../../types';
+import { BASE_TILE_ATTRIBUTION, BASE_TILE_URL, DATA_BOUNDS, FRANCE_BOUNDS } from '../../config';
 
 export interface LeafletHandles {
   map: L.Map;
@@ -20,12 +19,6 @@ export const FRANCE_LATLNG_BOUNDS = L.latLngBounds(
 export const DATA_LATLNG_BOUNDS = L.latLngBounds(
   [DATA_BOUNDS.minLat, DATA_BOUNDS.minLon],
   [DATA_BOUNDS.maxLat, DATA_BOUNDS.maxLon],
-);
-
-/** Zone maximale visible / déplaçable : France au centre, moitié de l'Espagne et de l'Italie au plus. */
-export const MAX_VIEW_LATLNG_BOUNDS = L.latLngBounds(
-  [MAX_VIEW_BOUNDS.minLat, MAX_VIEW_BOUNDS.minLon],
-  [MAX_VIEW_BOUNDS.maxLat, MAX_VIEW_BOUNDS.maxLon],
 );
 
 /**
@@ -50,13 +43,11 @@ export function goHome(map: L.Map, animate: boolean) {
 }
 
 /**
- * Locks the map around France: users can zoom out a little beyond the France view and pan
- * around MAX_VIEW_BOUNDS (itself inside the data box, so every bit of sea has a temperature).
+ * Locks the map: zoom-out stops at the France view (minZoomFor) and panning stays inside the
+ * data box, so every bit of sea on screen has a temperature.
  * Re-applied when the container size changes (first layout, window resize, devtools…).
  */
 function lockToData(map: L.Map, container: HTMLElement): () => void {
-  map.setMaxBounds(MAX_VIEW_LATLNG_BOUNDS);
-
   // Until the user pans/zooms, a resize re-centres on France; after that we leave their view alone.
   let userMoved = false;
   const markMoved = () => (userMoved = true);
@@ -65,10 +56,19 @@ function lockToData(map: L.Map, container: HTMLElement): () => void {
 
   const apply = () => {
     map.invalidateSize({ animate: false });
-    map.setMinZoom(minZoomFor(map));
+    const minZoom = minZoomFor(map);
+    // No animation anywhere here: an animated zoom/pan interrupted by a non-animated jump leaves the
+    // base tiles frozen at the wrong scale (20-50 px off the coastline until the user zooms).
+    // Hence map.options.minZoom instead of map.setMinZoom() (which may start an animated zoom).
+    map.options.minZoom = minZoom;
     if (!userMoved) goHome(map, false);
+    else if (map.getZoom() < minZoom) map.setZoom(minZoom, { animate: false });
+    map.fire('zoomlevelschange');
   };
   apply();
+  // maxBounds AFTER the first framing: set on the provisional zoom-6 view (wider than the data box on
+  // 1920 px screens), Leaflet would start an animated "pan inside bounds" that the framing interrupts.
+  map.setMaxBounds(DATA_LATLNG_BOUNDS);
   const observer = new ResizeObserver(apply);
   observer.observe(container);
 
@@ -80,11 +80,9 @@ function lockToData(map: L.Map, container: HTMLElement): () => void {
 
 export function useLeafletMap(
   containerRef: RefObject<HTMLDivElement | null>,
-  tileStyle: TileStyle,
   onMapClick: () => void,
 ): LeafletHandles | null {
   const [handles, setHandles] = useState<LeafletHandles | null>(null);
-  const tileLayerRef = useRef<L.TileLayer | null>(null);
   const onClickRef = useRef(onMapClick);
   onClickRef.current = onMapClick;
 
@@ -100,11 +98,8 @@ export function useLeafletMap(
       preferCanvas: true,
     });
     L.control.zoom({ position: 'bottomright' }).addTo(map);
-    tileLayerRef.current = L.tileLayer(TILE_URLS[tileStyle], {
-      maxZoom: 13,
-      attribution: '&copy; OpenStreetMap France &copy; Esri World Ocean &copy; Copernicus C3S',
-    }).addTo(map);
     const unlock = lockToData(map, containerRef.current);
+    L.tileLayer(BASE_TILE_URL, { maxZoom: 13, attribution: BASE_TILE_ATTRIBUTION }).addTo(map);
     if (import.meta.env.DEV) (window as unknown as { __camarineMap: L.Map }).__camarineMap = map; // for tests
     map.on('click', () => onClickRef.current());
 
@@ -115,11 +110,6 @@ export function useLeafletMap(
       setHandles(null);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Swap base tiles without recreating the map.
-  useEffect(() => {
-    tileLayerRef.current?.setUrl(TILE_URLS[tileStyle]);
-  }, [tileStyle]);
 
   return handles;
 }

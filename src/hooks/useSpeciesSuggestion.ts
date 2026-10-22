@@ -1,6 +1,6 @@
 // State of the "suggest a missing species" form (expert catalogue).
 import { useState } from 'react';
-import { submitSuggestion } from '../api/suggestions';
+import { cleanSuggestionText, submitSuggestion } from '../api/suggestions';
 
 export const SUGGESTION_LIMITS = { name: 120, message: 2000 };
 
@@ -13,20 +13,25 @@ export function useSpeciesSuggestion() {
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
 
-  const canSubmit = speciesName.trim().length >= 2 && status !== 'sending';
+  const cleanName = cleanSuggestionText(speciesName, SUGGESTION_LIMITS.name, false);
+  const canSubmit = cleanName.length >= 2 && /\p{L}/u.test(cleanName) && status !== 'sending';
 
   const submit = async () => {
     if (!canSubmit) return;
     setStatus('sending');
     setError(null);
     try {
-      await submitSuggestion({ speciesName: speciesName.trim(), message: message.trim(), website });
+      await submitSuggestion({
+        speciesName: cleanName,
+        message: cleanSuggestionText(message, SUGGESTION_LIMITS.message, true),
+        website,
+      });
       setStatus('sent');
       setSpeciesName('');
       setMessage('');
     } catch (err) {
       setStatus('error');
-      setError(err instanceof Error && err.message !== 'Failed to fetch' ? err.message : 'Serveur injoignable : la suggestion n’a pas été envoyée.');
+      setError(err instanceof Error ? err.message : 'La suggestion n’a pas été envoyée.');
     }
   };
 

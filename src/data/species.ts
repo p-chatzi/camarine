@@ -2,7 +2,7 @@
 //
 // To add a species: append an object here (every field is required except the ⚠ legacy SST pair),
 // optionally add curated photos in speciesImages.ts (otherwise the card loads the Wikipedia/Commons
-// image of the scientific name), and reference its id from a museum section in museumSections.ts.
+// image of the scientific name). `narrationText` is kept for the future audio guide (not shown today).
 //
 // Rules (see SOURCES.md):
 // - `coords` must be at sea or in a coastal lagoon, never on land (checked by script before commit).
@@ -59,7 +59,6 @@ export const SPECIES_DATA: SpeciesItem[] = [
     impactDetails: 'Extrêmement sensible au réchauffement des couches d’eau intermédiaires, le corail rouge perd ses polypes nourriciers lors des vagues de chaleur. Sa croissance très lente empêche toute régénération rapide entre deux étés caniculaires.',
     narrationText: 'Sur les tombants rocheux méditerranéens, le précieux corail rouge met des décennies à grandir de quelques centimètres. Les canicules marines répétées détruisent en un été ce que la mer a mis un siècle à bâtir.',
     shortDesc: 'Corail précieux de Méditerranée.',
-    museumSection: 'med',
   },
   {
     id: 'plancton-global',
@@ -90,7 +89,6 @@ export const SPECIES_DATA: SpeciesItem[] = [
     shortDesc: 'La base invisible de toute la chaîne alimentaire océanique.',
     impactDetails: 'Les canicules marines bloquent le brassage vertical des eaux (stratification). Privé de sels nutritifs profonds, le phytoplancton nourricier s’effondre au profit de micro-algues toxiques comme Ostreopsis ovata sur nos côtes.',
     narrationText: 'Tout commence dans l’infiniment petit : le plancton produit plus de la moitié de l’oxygène que nous respirons. Mais la chaleur bloque les courants nutritifs, affamant le bon plancton et déclenchant des proliférations toxiques.',
-    museumSection: 'plankton',
   },
   {
     id: 'posidonie',
@@ -129,7 +127,6 @@ export const SPECIES_DATA: SpeciesItem[] = [
     shortDesc: 'Puits de carbone majeur (plus fort taux de séquestration au m²).',
     impactDetails: 'À plus de 28°C, la posidonie subit un déséquilibre métabolique sévère. Lors des étés chauds récents (par exemple 2018 dans les Calanques), des floraisons massives ont été observées, probablement favorisées par la température de l’eau, épuisant les réserves de la plante.',
     narrationText: 'La posidonie possède la plus forte capacité de séquestration de carbone au monde. Mais les canicules la poussent à bout : lors des étés les plus chauds, les herbiers fleurissent massivement, un signal de détresse face à la chaleur.',
-    museumSection: 'med',
   },
   {
     id: 'gorgone-med',
@@ -161,7 +158,6 @@ export const SPECIES_DATA: SpeciesItem[] = [
     shortDesc: 'Forêts animales abritant 15 à 20 % des espèces connues en Méditerranée.',
     impactDetails: 'Organisme fixe à croissance très lente, la gorgone est ultra-vulnérable. Les canicules de 1999, 2003, 2006 et surtout l\'épisode foudroyant d\'août 2022 ont provoqué des nécroses massives des tissus, détruisant ces forêts animales.',
     narrationText: 'Les gorgones forment des forêts animales essentielles qui abritent près de 20 % de la biodiversité méditerranéenne. Incapables de fuir la plongée des eaux chaudes en août 2022, elles ont subi des nécroses foudroyantes.',
-    museumSection: 'med',
   },
   {
     id: 'moules-thau',
@@ -191,7 +187,6 @@ export const SPECIES_DATA: SpeciesItem[] = [
     shortDesc: 'La "mauvaise eau" asphyxie la production conchylicole méditerranéenne.',
     impactDetails: 'Les épisodes de chaleur prolongée dans les lagunes (qui fournissent 90% de la production régionale) déclenchent la "malaïgue". L\'eau chaude perd son oxygène, générant du sulfure d\'hydrogène qui décime la totalité des cordes de moules.',
     narrationText: 'Dans l’étang de Thau, la chaleur est le pire ennemi des ostréiculteurs. Une eau trop chaude déclenche la "malaïgue", une crise d’asphyxie foudroyante qui peut anéantir 100 % des récoltes de moules en quelques jours.',
-    museumSection: 'med',
   },
   {
     id: 'huitres-moules',
@@ -225,7 +220,6 @@ export const SPECIES_DATA: SpeciesItem[] = [
     shortDesc: 'Effondrement des rendements face au manque de nourriture et prédateurs.',
     impactDetails: 'La chaleur augmente la dépense d’énergie des moules alors que le phytoplancton diminue. Affaiblies, elles subissent de plein fouet l\'acidification de l\'eau et la prédation accrue des araignées de mer, faisant perdre un quart de la production nationale (49 000 t).',
     narrationText: 'Sur la façade Atlantique, les moules souffrent d’un double péril : la chaleur augmente leurs besoins en énergie alors que le plancton se fait rare. Épuisées, elles sont ensuite dévorées par les araignées de mer, provoquant jusqu\'à 75 % de perte en baie de Saint-Brieuc.',
-    museumSection: 'atl',
   },
   {
     id: 'bulot-manche',
@@ -255,7 +249,6 @@ export const SPECIES_DATA: SpeciesItem[] = [
     shortDesc: 'Espèce emblématique d\'eaux froides dont la pêcherie s\'effondre.',
     impactDetails: 'Le bulot est une espèce très sensible à la température. Les canicules marines intenses, comme celle de mai 2026 (la plus impactante depuis 1960), entravent sa reproduction et sa croissance, menaçant directement la viabilité économique de cette filière.',
     narrationText: 'Le bulot aime les eaux froides de la Manche. Les canicules marines, de plus en plus précoces et intenses, entravent sa reproduction. C\'est toute une filière littorale de plusieurs milliers d\'emplois qui se retrouve aujourd\'hui menacée.',
-    museumSection: 'manche',
   },
   {
     id: 'laminaires-bretagne',
@@ -280,7 +273,6 @@ export const SPECIES_DATA: SpeciesItem[] = [
     shortDesc: 'Cathédrales d’algues brunes géantes d’Atlantique.',
     impactDetails: 'Les chercheurs de l\'Ifremer alertent sur la chute de densité de la canopée des laminaires. La raréfaction de ces grandes algues entraîne des conséquences en cascade sur toutes les espèces commerciales (crustacés, poissons) qui s\'y abritent.',
     narrationText: 'Les forêts de laminaires sont de véritables cathédrales sous-marines en Bretagne. Mais la chute de leur densité de canopée à cause des eaux trop chaudes prive de refuge des milliers d\'espèces de poissons et de crustacés.',
-    museumSection: 'atl',
   },
   {
     id: 'pieuvre-manche',
@@ -314,7 +306,6 @@ export const SPECIES_DATA: SpeciesItem[] = [
     shortDesc: 'Espèce gagnante de la "tropicalisation" des eaux françaises.',
     impactDetails: 'Exemple parfait de "tropicalisation" : le poulpe commun profite des hivers doux et des canicules estivales qui boostent la survie de ses larves. Il prolifère massivement, devenant un super-prédateur invasif pour les coquilles Saint-Jacques.',
     narrationText: 'C’est le grand gagnant du réchauffement ! Le poulpe profite de l\'adoucissement des hivers pour envahir la Manche. Cette "tropicalisation" ravit certains, mais inquiète les pêcheurs de coquilles Saint-Jacques qui se font dévorer leurs stocks.',
-    museumSection: 'manche',
   },
 
   // =============================== Mode expert uniquement ======================================
@@ -346,7 +337,6 @@ export const SPECIES_DATA: SpeciesItem[] = [
     shortDesc: 'Animal filtreur fixé, sans défense face au stress thermique.',
     impactDetails: 'Les éponges méditerranéennes subissent des maladies et des mortalités massives, principalement déclenchées par les canicules marines : le stress thermique déséquilibre l’éponge et ses micro-organismes associés et provoque des nécroses.',
     narrationText: 'L’éponge de toilette est un animal, pas une plante. Fixée au rocher, elle ne peut pas fuir la chaleur : lors des canicules marines, des maladies se déclarent et des populations entières se nécrosent.',
-    museumSection: 'med',
   },
   {
     id: 'grande-nacre',
@@ -382,7 +372,6 @@ export const SPECIES_DATA: SpeciesItem[] = [
     shortDesc: 'Le plus grand coquillage de Méditerranée, au bord de l’extinction.',
     impactDetails: 'Depuis 2016, un parasite (Haplosporidium pinnae) décime la grande nacre dans toute la Méditerranée, France comprise. L’espèce est classée En danger critique par l’UICN depuis 2019. Le rôle exact de la température de l’eau dans la propagation du parasite est encore étudié.',
     narrationText: 'La grande nacre peut mesurer un mètre. Depuis 2016, un parasite a décimé ses populations dans toute la Méditerranée. Elle est aujourd’hui en danger critique d’extinction.',
-    museumSection: 'med',
   },
   {
     id: 'tortue-caouanne',
@@ -418,7 +407,6 @@ export const SPECIES_DATA: SpeciesItem[] = [
     shortDesc: 'Une grande voyageuse qui pond désormais sur nos plages.',
     impactDetails: 'Les pontes de tortues caouannes se multiplient sur le littoral méditerranéen français, comme en Italie et en Espagne depuis une dizaine d’années. La hausse de la température de l’eau fait partie des explications envisagées, avec les courants et l’évolution des habitats, mais les causes ne sont pas encore établies.',
     narrationText: 'Il y a quelques années, voir une tortue marine pondre sur une plage française était presque impensable. Aujourd’hui, à Porquerolles ou à Fréjus, des nids de tortue caouanne sont découverts presque chaque été.',
-    museumSection: 'med',
   },
   {
     id: 'barracuda',
@@ -451,7 +439,6 @@ export const SPECIES_DATA: SpeciesItem[] = [
     shortDesc: 'Poisson des mers chaudes qui s’installe sur nos côtes.',
     impactDetails: 'Poisson thermophile longtemps cantonné au sud de la Méditerranée, le barracuda est de plus en plus observé en bancs dans les Calanques. C’est un signe de la « méridionalisation » : les espèces d’eaux chaudes progressent vers le nord pendant que les espèces d’eaux froides reculent.',
     narrationText: 'Des bancs de barracudas dans les Calanques : il y a vingt ans, c’était rare. Ces poissons des mers chaudes remontent vers le nord à mesure que la Méditerranée se réchauffe.',
-    museumSection: 'med',
   },
   {
     id: 'merou-brun',
@@ -483,7 +470,6 @@ export const SPECIES_DATA: SpeciesItem[] = [
     shortDesc: 'Le seigneur des roches, revenu grâce à la protection.',
     impactDetails: 'Le mérou revient en force dans le Parc national de Port-Cros, d’abord grâce à la protection (interdiction de la chasse sous-marine, moratoires). Des juvéniles y sont observés : un léger réchauffement des eaux de Méditerranée nord-occidentale fait partie des facteurs avancés pour expliquer ce recrutement local, sans être établi.',
     narrationText: 'Le mérou brun avait presque disparu de nos côtes. Grâce aux réserves marines, il est revenu, et des jeunes mérous naissent désormais à Port-Cros. L’eau plus chaude pourrait l’y aider.',
-    museumSection: 'med',
   },
   {
     id: 'meduse-pelagia',
@@ -515,7 +501,6 @@ export const SPECIES_DATA: SpeciesItem[] = [
     shortDesc: 'La méduse qui profite des hivers doux.',
     impactDetails: 'La méduse pélagie se multiplie rapidement et atteint de fortes densités, en particulier quand les hivers sont doux. La surpêche de ses prédateurs et compétiteurs est le moteur principal, mais le réchauffement de la mer y contribue aussi.',
     narrationText: 'Violette et urticante, la méduse pélagie apparaît de plus en plus souvent. Les hivers plus doux l’aident à se multiplier toute l’année.',
-    museumSection: 'med',
   },
   {
     id: 'ostreopsis',
@@ -541,7 +526,6 @@ export const SPECIES_DATA: SpeciesItem[] = [
     shortDesc: 'Micro-algue toxique des petits fonds en été.',
     impactDetails: 'Suivie chaque été depuis 2007 sur la Côte d’Azur, Ostreopsis connaît ses plus forts taux de croissance entre 21 et 25°C environ, et des anomalies chaudes au printemps avancent le début des efflorescences. L’effet de la température est plus complexe qu’une simple hausse : les pics ne coïncident pas avec les eaux les plus chaudes.',
     narrationText: 'Invisible à l’œil nu, Ostreopsis tapisse les petits fonds en été. Quand le printemps est chaud, ses efflorescences démarrent plus tôt, avec des irritations possibles pour les baigneurs.',
-    museumSection: 'plankton',
   },
   {
     id: 'baliste',
@@ -573,7 +557,6 @@ export const SPECIES_DATA: SpeciesItem[] = [
     shortDesc: 'Un poisson des eaux chaudes de plus en plus au nord.',
     impactDetails: 'Longtemps visiteur rare des eaux du nord, le baliste est signalé de plus en plus au nord, jusqu’en Manche. Le réchauffement de l’océan pourrait expliquer cette remontée, mais le lien n’est pas démontré.',
     narrationText: 'Avec ses dents de lapin, le baliste broie oursins et coquillages. Ce poisson des eaux chaudes est désormais pêché jusqu’en Normandie.',
-    museumSection: 'atl',
   },
   {
     id: 'huitre-creuse-sauvage',
@@ -601,7 +584,6 @@ export const SPECIES_DATA: SpeciesItem[] = [
     shortDesc: 'L’huître d’élevage devenue sauvage grâce aux étés plus chauds.',
     impactDetails: 'D’abord limitée à Marennes-Oléron et Arcachon (1975), l’huître creuse se reproduit à l’état sauvage au nord de la Loire depuis le milieu des années 1990, à la faveur d’un réchauffement d’environ 1°C des eaux bretonnes. Les épisodes chauds de juillet-août favorisent la ponte et la survie des larves.',
     narrationText: 'Importée du Pacifique pour l’élevage, l’huître creuse s’est échappée des parcs. Avec des étés plus chauds, elle se reproduit seule et colonise les rochers bretons.',
-    museumSection: 'atl',
   },
   {
     id: 'laminaire-digitee',
@@ -624,6 +606,5 @@ export const SPECIES_DATA: SpeciesItem[] = [
     shortDesc: 'Algue d’eaux froides en limite sud de son aire en Bretagne.',
     impactDetails: 'Les modèles de Raybaud et al. (2013) projettent un recul de la limite sud de la laminaire digitée de la France vers le Danemark et le sud du Royaume-Uni. Selon les scénarios de réchauffement moyen à fort, elle pourrait disparaître des côtes françaises dès la première moitié du siècle.',
     narrationText: 'La laminaire digitée aime l’eau froide. La Bretagne est déjà à la limite sud de son territoire : avec le réchauffement, ses champs pourraient disparaître de nos côtes.',
-    museumSection: 'manche',
   },
 ];

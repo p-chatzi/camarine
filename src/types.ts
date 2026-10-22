@@ -1,15 +1,18 @@
 // Shared types used across the app. If a shape crosses a file boundary, it lives here.
 
 // ---- UI state --------------------------------------------------------------
-export type AppMode = 'visualiser' | 'comprendre' | 'partager' | 'museum';
+export type AppMode = 'visualiser' | 'comprendre' | 'partager';
 export type Basin = 'Méditerranée' | 'Atlantique' | 'Manche';
-export type BasinFilter = 'Tous' | Basin;
+/** Protected marine area offered next to the basins in the "Façades" filter. */
+export type MarineZone = 'Pelagos';
+export type BasinFilter = 'Tous' | Basin | MarineZone;
+/** What the camera focuses on: a basin, a marine zone, or null (= whole of France). */
+export type MapFocus = Basin | MarineZone | null;
 export type TrendFilter = 'Tous' | 'decline' | 'proliferate';
 /** 'daily' = one selected day; 'average' = the whole loaded period. */
 export type ColorMode = 'daily' | 'average';
 /** What the map pixels show: raw SST, Hobday heatwave categories, or SST + species pins. */
 export type MapDataType = 'sst' | 'mhw' | 'impact';
-export type TileStyle = 'voyager' | 'osm';
 export type ExportFormat = 'csv' | 'json';
 export type LatLon = [number, number];
 
@@ -66,8 +69,8 @@ export interface SpeciesItem {
   mortalityRate: string;
   shortDesc: string;
   impactDetails: string;
+  /** Script for the future audio guide (not displayed nor read aloud today). */
   narrationText: string;
-  museumSection?: string;
 }
 
 export interface SpeciesImage {
@@ -76,17 +79,6 @@ export interface SpeciesImage {
   alt: string;
   artist: string;
   license: string;
-}
-
-export interface MuseumSection {
-  id: string;
-  buttonNumber: number;
-  title: string;
-  subtitle: string;
-  center: LatLon;
-  zoom: number;
-  color: string;
-  speciesIds: string[];
 }
 
 // ---- Backend payloads (see backend/main.py) --------------------------------

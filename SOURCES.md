@@ -46,12 +46,19 @@ Ce document indique d'où viennent les données et les textes affichés par Cama
 - **Licence :** Licence Ouverte / Etalab 2.0 (attribution « IGN » affichée sur la carte).
 - **Traitement :** simplifié avec [mapshaper](https://github.com/mbloch/mapshaper) (`-simplify 10% weighted keep-shapes`, îles de moins de 2 km² retirées, précision 0,0001°), soit 54 Ko. Fichier : `public/geo/france-metropole.geojson`. DOM-TOM exclus pour l'instant.
 
-### 1.3 Fonds de carte et photos
+### 1.3 Sanctuaire Pelagos (filtre « Façades »)
 
-- **Fonds de carte :** Esri *World Ocean Base* (bathymétrie) et OpenStreetMap France. Gratuits et sans clé, attribution affichée.
+- **Limites :** article 3 de l'*Accord relatif à la création en Méditerranée d'un sanctuaire pour les mammifères marins* (Rome, 25/11/1999) — ligne ouest de la pointe Escampobariou (presqu'île de Giens) à Capo Falcone (Sardaigne), ligne est de Capo Ferro (Sardaigne) à Fosso Chiarone (Toscane), et les côtes entre ces points ([texte de l'accord, ministère italien de l'Environnement](https://mase.gov.it/sites/default/files/accordo_santuario_mammiferi_marini_25_11_1999.pdf)). La coordonnée d'Escampobariou est publiée « 43°01'70"N, 06°05'90"E » (secondes > 59) : elle est lue en minutes décimales, ce qui tombe bien sur la pointe ouest de Giens.
+- **Construction :** `scripts/build_pelagos.py` trace ces deux lignes, retire les terres avec le trait de côte Natural Earth 10 m (domaine public) et écrit `public/geo/pelagos.geojson` (mer uniquement, îles exclues). Contrôle : surface calculée ≈ 87 650 km² pour 87 500 km² officiels (écart 0,2 %).
+- **Faits affichés** (signataires, dates, surface, 8 cétacés réguliers) : Barcelo et al. (2013), *Scientific Reports of Port-Cros National Park* 27 : 451-460 ([PDF, PN Port-Cros](https://www.portcros-parcnational.fr/sites/portcros-parcnational.fr/files/4035c0e917b8f9cc414f76b7b69d584d.pdf)). Le Parc national de Port-Cros anime la partie française de l'accord.
+- **Espèces « dans la zone » :** celles dont le point est à l'intérieur du polygone (test géométrique). Aucune des espèces actuelles n'est un mammifère marin : la cible même du sanctuaire reste à ajouter.
+
+### 1.4 Fonds de carte et photos
+
+- **Fond de carte :** Esri *World Ocean Base* (bathymétrie), gratuit et sans clé, attribution affichée.
 - **Photos d'espèces :** Wikimedia Commons. L'auteur et la licence sont affichés au survol de chaque photo. Les espèces sans photo choisie à la main reçoivent l'image principale de leur article Wikipédia, avec l'auteur et la licence lus sur Commons au moment de l'affichage (`src/api/wikimedia.ts`).
 
-### 1.4 Fiches espèces : statut UICN et publications
+### 1.5 Fiches espèces : statut UICN et publications
 
 Chaque fiche (`src/data/species.ts`) contient :
 - le **statut Liste rouge UICN**, avec sa portée (mondiale ou régionale Méditerranée), son année et un lien vers l'évaluation. `NE` signifie qu'**aucune évaluation n'a été trouvée** : à vérifier, ce qui ne veut pas dire « pas menacée » ;
@@ -84,7 +91,7 @@ Les textes restent un **brouillon indicatif** (bandeau « Placeholder [ À titre
 
 **Positions sur la carte.** Chaque espèce a un point **en mer ou dans une lagune côtière, jamais à terre**. C'est vérifié par `npm run check:species`, à relancer après chaque ajout. Les points marqués « position indicative » illustrent une zone de présence : ce ne sont pas des observations géolocalisées.
 
-### 1.5 Contexte général cité dans l'application
+### 1.6 Contexte général cité dans l'application
 
 - Garrabou, J. et al. (2022). *Marine heatwaves drive recurrent mass mortalities in the Mediterranean Sea.* Global Change Biology. <https://doi.org/10.1111/gcb.16301> : mortalités massives touchant 50 taxons de 8 embranchements entre 2015 et 2019.
 - Liste rouge UICN : <https://www.iucnredlist.org>
@@ -126,6 +133,6 @@ Ces sources sont identifiées pour remplacer les textes provisoires et les posit
 1. Ajoutez la référence dans le champ `sources` de l'espèce (`src/data/species.ts`), avec un titre lisible et un lien stable (DOI de préférence).
 2. Mettez à jour `iucn` et `heatEvidence` si nécessaire.
 3. Lancez `npm run check:species` si vous changez une position.
-4. Mettez à jour le tableau de la section 1.4.
+4. Mettez à jour le tableau de la section 1.5.
 
 Les visiteurs peuvent proposer une espèce manquante depuis le catalogue du mode expert. Les propositions sont enregistrées dans `suggestions_data/suggestions.jsonl`, côté serveur, sans aucune donnée personnelle, pour être relues par l'équipe.

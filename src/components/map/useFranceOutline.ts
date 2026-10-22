@@ -2,6 +2,7 @@
 import L from 'leaflet';
 import { useEffect } from 'react';
 import { fetchFranceOutline } from '../../api/geo';
+import { ringsAsLines } from '../../lib/geo';
 
 const PANE = 'franceOutline';
 
@@ -22,8 +23,9 @@ export function useFranceOutline(map: L.Map | undefined) {
 
     fetchFranceOutline(controller.signal)
       .then((geojson) => {
-        L.geoJSON(geojson, { pane: PANE, style: HALO_STYLE, renderer } as L.GeoJSONOptions).addTo(group);
-        L.geoJSON(geojson, { pane: PANE, style: LINE_STYLE, renderer } as L.GeoJSONOptions).addTo(group);
+        const lines = ringsAsLines(geojson); // no straight clip edges when France is partly off-screen
+        L.geoJSON(lines, { pane: PANE, style: HALO_STYLE, renderer } as L.GeoJSONOptions).addTo(group);
+        L.geoJSON(lines, { pane: PANE, style: LINE_STYLE, renderer } as L.GeoJSONOptions).addTo(group);
       })
       .catch((err) => {
         if (err?.name !== 'AbortError') console.warn('[Camarine] contour France indisponible :', err);

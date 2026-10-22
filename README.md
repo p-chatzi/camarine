@@ -37,14 +37,15 @@ Vérifications utiles :
 npm run typecheck      # vérification TypeScript stricte
 npm run build          # build de production dans dist/
 npm run test:data      # tests Python (Hobday + suggestions d'espèces)
-npm run check:species  # chaque espèce est bien en mer (pas sur terre), points trop proches
+npm run check:species  # chaque espèce est bien en mer (pas sur terre), points trop proches, espèces dans Pelagos
+python scripts/build_pelagos.py ne_10m_land.geojson  # régénère la zone Pelagos (shapely, voir SOURCES.md)
 ```
 
 ## Hébergement
 
 `npm run build` génère un site statique dans `dist/`. Il appelle `/api/...` sur sa propre origine : servez donc `dist/` et le backend FastAPI derrière le même domaine (ex. avec nginx : `/` → `dist/`, `/api` → uvicorn). Si l'API est hébergée sur un autre domaine, définissez `ALLOWED_ORIGINS=https://votre-site` pour le backend. Les identifiants Copernicus restent sur le serveur (`copernicusmarine login` ou variables d'environnement), jamais dans le frontend.
 
-Le bouton **Mode expert** (dans l'en-tête) affiche la barre de télémétrie brute, les identifiants de produits et les sources de données, ainsi que le **catalogue des espèces** (menu à droite : faune / flore, recherche par nom, statut UICN, formulaire « Une espèce manque ? ») et les espèces réservées aux experts sur la carte. Il est désactivé par défaut et mémorisé par navigateur. Les suggestions sont enregistrées côté serveur dans `suggestions_data/suggestions.jsonl` (ignoré par git, sans donnée personnelle). Les kits pédagogiques, les quiz, les sessions de classe et le déploiement en mode kiosque restent des travaux prévus sur la feuille de route ultérieure.
+Le bouton **Mode expert** (dans l'en-tête) affiche la barre de télémétrie brute, les identifiants de produits et les sources de données, ainsi que le **catalogue des espèces** (menu à droite : faune / flore, recherche par nom, statut UICN, formulaire « Une espèce manque ? ») et les espèces réservées aux experts sur la carte. Il est toujours désactivé au chargement de la page ; la carte s'ouvre en « Mode Impact Biologique ». Les suggestions sont enregistrées côté serveur dans `suggestions_data/suggestions.jsonl` (ignoré par git, sans donnée personnelle). Le guide audiovisuel (voix off, ambiance sonore, visite guidée), les kits pédagogiques, les quiz, les sessions de classe et le déploiement en mode kiosque restent des travaux prévus sur la feuille de route ultérieure.
 
 ## Pipeline Copernicus Marine
 
