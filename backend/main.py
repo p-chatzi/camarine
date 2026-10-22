@@ -11,10 +11,12 @@ import traceback
 from datetime import date
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from pydantic import BaseModel, Field
 
+from . import suggestion_service
 from .map_service import get_map_payload
 from .mhw_service import get_mhw_payload
 
@@ -24,7 +26,12 @@ ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,http:
 app = FastAPI(title="Camarine Copernicus API")
 # /api/map returns ~100k pixels: gzip cuts the transfer by ~5x.
 app.add_middleware(GZipMiddleware, minimum_size=1000)
-app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_methods=["GET"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
+)
 
 
 @app.get("/api/health")
@@ -59,3 +66,25 @@ def current_map(
 ) -> dict[str, Any]:
     """SST pixels over a bounding box for one day."""
     return get_map_payload((min_lon, max_lon, min_lat, max_lat), day)
+
+
+class SpeciesSuggestionIn(BaseModel):
+    species_name: str = Field(min_length=2, max_length=suggestion_service.NAME_MAX)
+    message: str = Field(default="", max_length=suggestion_service.MESSAGE_MAX)
+    website: str = Field(default="", max_length=200)  # honeypot: humans leave it empty
+
+
+@app.post("/api/suggestions", status_code=201)
+def suggest_species(payload: SpeciesSuggestionIn, request: Request) -> dict[str, str]:
+    """Stores a "missing species" suggestion for review (see suggestion_service.py)."""
+    if payload.website:
+        return {"status": "ok"}  # bot: pretend success, store nothing
+    client = request.client.host if request.client else "unknown"
+    if not suggestion_service.allow_request(client):
+        raise HTTPException(status_code=429, detail="Trop de suggestions, réessayez plus tard.")
+    try:
+        record = suggestion_service.build_record(payload.species_name, payload.message)
+    except suggestion_service.SuggestionError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    suggestion_service.append_record(record)
+    return {"status": "ok"}

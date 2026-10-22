@@ -16,6 +16,11 @@ export interface ExportContext {
   speciesSst: (coords: LatLon) => number;
 }
 
+/** Quoted CSV cell with inner quotes doubled. */
+function csvText(value: string): string {
+  return `"${value.replace(/"/g, '""')}"`;
+}
+
 function speciesCategory(ctx: ExportContext, sst: number) {
   return getHobdayCategory(
     sst,
@@ -68,20 +73,24 @@ export function buildCsv(ctx: ExportContext): string {
   const speciesSection = [
     ``,
     `# --- SECTION 3 : INDICATEURS BIOLOGIQUES & ESPÈCES ---`,
-    `Species_Type,ID_Espece,Nom_Commun,Nom_Scientifique,Bassin,Latitude,Longitude,Tendance,Seuil_Critique,SST_Observee_C,Categorie_Hobday,Multiplicateur_Intensite`,
+    `Species_Type,ID_Espece,Nom_Commun,Nom_Scientifique,Regne,Bassin,Latitude,Longitude,Tendance,Lien_Chaleur,Statut_UICN,Portee_UICN,Seuil_Critique,SST_Observee_C,Categorie_Hobday,Multiplicateur_Intensite`,
     ...SPECIES_DATA.map((sp) => {
       const sst = ctx.speciesSst(sp.coords);
       const cat = speciesCategory(ctx, sst);
       return [
         `SPECIES`,
         sp.id,
-        `"${sp.name}"`,
-        `"${sp.scientificName}"`,
-        `"${sp.basin}"`,
+        csvText(sp.name),
+        csvText(sp.scientificName),
+        sp.kingdom,
+        csvText(sp.basin),
         sp.coords[0],
         sp.coords[1],
         `"${sp.trend}"`,
-        `"${sp.criticalThreshold.replace(/"/g, '""')}"`,
+        csvText(sp.heatEvidence),
+        sp.iucn.category,
+        csvText(sp.iucn.scope),
+        csvText(sp.criticalThreshold),
         +sst.toFixed(2),
         `"${cat.name}"`,
         cat.mult,
@@ -120,13 +129,20 @@ export function buildJson(ctx: ExportContext): string {
         id: sp.id,
         name: sp.name,
         scientificName: sp.scientificName,
+        kingdom: sp.kingdom,
+        audience: sp.audience,
         basin: sp.basin,
         coordinates: { lat: sp.coords[0], lon: sp.coords[1] },
+        habitat: sp.habitat,
+        role: sp.role,
+        iucn: sp.iucn,
         responseToMarineHeatwave: sp.trend === 'decline' ? '- Disparaît / Déclin' : '+ Apparaît / Prolifère',
+        heatEvidence: sp.heatEvidence,
         criticalThreshold: sp.criticalThreshold,
+        sources: sp.sources,
         telemetryAtSelection: {
           date: activeDate,
-          sstBaseline2015: sp.baseSst2015,
+          sstBaseline2015: sp.baseSst2015 ?? null,
           sstObserved: +sst.toFixed(2),
           hobdayCategory: cat.name,
           intensityMultiple: cat.mult,

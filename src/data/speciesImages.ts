@@ -1,4 +1,6 @@
 // Wikimedia Commons photos per species id (shown in the species card carousel).
+// Species without an entry here get the main Wikipedia image of their scientific name at runtime
+// (see src/api/wikimedia.ts), with author and licence read from Wikimedia Commons.
 import type { SpeciesImage } from '../types';
 
 export const SPECIES_GALLERY_IMAGES: Record<string, SpeciesImage[]> = {
@@ -6,8 +8,10 @@ export const SPECIES_GALLERY_IMAGES: Record<string, SpeciesImage[]> = {
     { title: 'Gorgone rouge', src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7a/Paramuricea_clavata_C%C3%B4te_bleue.jpg/1280px-Paramuricea_clavata_C%C3%B4te_bleue.jpg', alt: 'Gorgone rouge sur la Côte Bleue', artist: 'FredD', license: 'CC BY-SA 4.0' },
     { title: 'Nécrose', src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Paramuricea_clavata_%28Risso%2C_1826%29_5.jpg/1280px-Paramuricea_clavata_%28Risso%2C_1826%29_5.jpg', alt: 'Détail des ramifications de la gorgone', artist: 'Parent Géry', license: 'CC BY-SA 3.0' }
   ],
-  'eponges-med': [
-    { title: 'Grande Nacre', src: 'https://upload.wikimedia.org/wikipedia/commons/0/02/Pinnidae_-_Pinna_nobilis.jpg', alt: 'Grande nacre (Pinna nobilis)', artist: 'Hectonichus', license: 'CC BY-SA 3.0' },
+  'grande-nacre': [
+    { title: 'Grande Nacre', src: 'https://upload.wikimedia.org/wikipedia/commons/0/02/Pinnidae_-_Pinna_nobilis.jpg', alt: 'Grande nacre (Pinna nobilis)', artist: 'Hectonichus', license: 'CC BY-SA 3.0' }
+  ],
+  'eponge-med': [
     { title: 'Eponge', src: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/Bath_sponge_Spongia_officinalis_Greece.jpg/1280px-Bath_sponge_Spongia_officinalis_Greece.jpg', alt: 'Spongia officinalis', artist: 'E. Voultsiadou', license: 'CC BY-SA 2.5' }
   ],
   'posidonie': [

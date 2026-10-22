@@ -1,8 +1,8 @@
-// Photo carousel of the species card: auto-advances every 5.5 s, pauses on hover.
+// Photo carousel of the species card: auto-advances every 6.5 s, pauses on hover.
 import { useEffect, useState } from 'react';
 import type { SpeciesImage } from '../types';
 
-const SLIDE_MS = 5500;
+const SLIDE_MS = 6500;
 
 export function useSpeciesCarousel(speciesId: string | undefined, images: SpeciesImage[] | null) {
   const [index, setIndex] = useState(0);
@@ -11,12 +11,12 @@ export function useSpeciesCarousel(speciesId: string | undefined, images: Specie
   useEffect(() => setIndex(0), [speciesId]);
 
   useEffect(() => {
-    if (!images || isHovering) return;
+    if (!images || images.length < 2 || isHovering) return;
     const timer = window.setInterval(() => setIndex((i) => (i + 1) % images.length), SLIDE_MS);
     return () => window.clearInterval(timer);
   }, [isHovering, speciesId, images]);
 
-  const next = () => images && setIndex((i) => (i + 1) % images.length);
+  const next = () => images && images.length > 0 && setIndex((i) => (i + 1) % images.length);
 
   return { index, setIndex, next, setIsHovering };
 }

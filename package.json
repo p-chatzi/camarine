@@ -25,6 +25,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p .",
-    "test:data": "python -m unittest tests/test_hobday.py"
+    "test:data": "python -m unittest tests/test_hobday.py tests/test_suggestions.py",
+    "check:species": "python scripts/check_species_points.py"
   }
 }

@@ -1,11 +1,11 @@
 // Tab 1 "Visualiser": the map plus its floating panels.
 import { Filter, Maximize2 } from 'lucide-react';
-import { useMemo, useState } from 'react';
-import { SPECIES_DATA } from '../../data/species';
-import { SPECIES_GALLERY_IMAGES } from '../../data/speciesImages';
+import { useEffect, useMemo, useState } from 'react';
 import type { CopernicusData } from '../../hooks/useCopernicusData';
 import type { MapSettings } from '../../hooks/useMapSettings';
 import type { MuseumTour } from '../../hooks/useMuseumTour';
+import { useSpeciesImages } from '../../hooks/useSpeciesImages';
+import { speciesForMode } from '../../lib/species';
 import type { AppMode, MapCell, SpeciesItem } from '../../types';
 import { RealWorldMap } from '../map/RealWorldMap';
 import { FilterPanel } from './FilterPanel';
@@ -13,6 +13,7 @@ import { MapLegend } from './MapLegend';
 import { MuseumControls } from './MuseumControls';
 import { MuseumPanel } from './MuseumPanel';
 import { SpeciesCard } from './SpeciesCard';
+import { SpeciesCatalog } from './SpeciesCatalog';
 import { TelemetryPill } from './TelemetryPill';
 
 interface Props {
@@ -28,10 +29,13 @@ interface Props {
   tour: MuseumTour;
 }
 
-/** Species pins only appear in "impact" mode, filtered by basin and trend. */
+/**
+ * Species pins only appear in "impact" mode, filtered by basin and trend.
+ * Normal mode shows the public species only; expert mode shows every species.
+ */
 function visibleSpecies(settings: MapSettings): SpeciesItem[] {
   if (settings.dataType !== 'impact') return [];
-  return SPECIES_DATA.filter(
+  return speciesForMode(settings.expert).filter(
     (sp) =>
       (settings.basin === 'Tous' || sp.basin === settings.basin) &&
       (settings.trend === 'Tous' || sp.trend === settings.trend),
@@ -41,8 +45,25 @@ function visibleSpecies(settings: MapSettings): SpeciesItem[] {
 export function VisualiserView(props: Props) {
   const { mode, data, settings, selectedSpecies, tour } = props;
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const species = useMemo(() => visibleSpecies(settings), [settings.dataType, settings.basin, settings.trend]); // eslint-disable-line react-hooks/exhaustive-deps
-  const images = selectedSpecies ? SPECIES_GALLERY_IMAGES[selectedSpecies.id] : null;
+  const [isCatalogOpen, setIsCatalogOpen] = useState(false);
+  const species = useMemo(() => visibleSpecies(settings), [settings.dataType, settings.basin, settings.trend, settings.expert]); // eslint-disable-line react-hooks/exhaustive-deps
+  const catalogSpecies = useMemo(() => speciesForMode(true), []);
+  const { images, isLoading: imagesLoading } = useSpeciesImages(selectedSpecies);
+
+  // Leaving expert mode closes the card of an expert-only species (its pin is no longer shown).
+  const { onClearSpecies } = props;
+  useEffect(() => {
+    if (!settings.expert && selectedSpecies?.audience === 'expert') onClearSpecies();
+  }, [settings.expert, selectedSpecies, onClearSpecies]);
+
+  /** Picking a species in the catalogue makes sure its pin is visible, then opens its card. */
+  const selectFromCatalog = (sp: SpeciesItem) => {
+    if (settings.dataType !== 'impact') settings.setDataType('impact');
+    if (settings.trend !== 'Tous' && settings.trend !== sp.trend) settings.setTrend('Tous');
+    if (settings.basin !== 'Tous' && settings.basin !== sp.basin) settings.setBasin('Tous');
+    setIsCatalogOpen(false);
+    props.onSelectSpecies(sp);
+  };
 
   return (
     <div className="flex-1 flex flex-col relative overflow-hidden">
@@ -95,17 +116,37 @@ export function VisualiserView(props: Props) {
           {mode === 'museum' && <MuseumPanel tour={tour} />}
         </div>
 
+        {/* Top-right (expert mode): species catalogue. The species card (rendered after it) covers it when open. */}
+        {settings.expert && (
+          <SpeciesCatalog
+            species={catalogSpecies}
+            selectedId={selectedSpecies?.id ?? null}
+            isOpen={isCatalogOpen}
+            onToggle={() => setIsCatalogOpen((open) => !open)}
+            onSelect={selectFromCatalog}
+          />
+        )}
+
         {settings.expert && data.telemetry && <TelemetryPill telemetry={data.telemetry} />}
         <MapLegend />
 
-        {selectedSpecies && images && (
+        {selectedSpecies && (
           <SpeciesCard
             species={selectedSpecies}
             images={images}
+            imagesLoading={imagesLoading}
             year={data.telemetry?.year || 2026}
             heatFactor={data.heatFactor}
             onClose={props.onClearSpecies}
             onSpeak={props.onSpeak}
+            onBack={
+              settings.expert
+                ? () => {
+                    props.onClearSpecies();
+                    setIsCatalogOpen(true);
+                  }
+                : undefined
+            }
             footer={mode === 'museum' ? <MuseumControls tour={tour} /> : null}
           />
         )}

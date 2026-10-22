@@ -1,13 +1,13 @@
 // Chapters of the guided "Fresque Murale" tour.
-// Note: some speciesIds (tortue-caouanne, meduse-pelagia, morue-atlantique) no longer exist
-// in species.ts; they are skipped at runtime.
+// Note: 'morue-atlantique' does not exist in species.ts; it is skipped at runtime.
+// 'tortue-caouanne' and 'meduse-pelagia' exist again since 22/10/2026 (expert-only species).
 import type { MuseumSection } from '../types';
 
 export const MUSEUM_SECTIONS: MuseumSection[] = [
   {
     id: 'med', buttonNumber: 1, title: 'Méditerranée : Coraux & Herbiers',
     subtitle: 'Forêts de gorgones, herbiers de posidonie & canicules', center: [43.05, 5.95], zoom: 7,
-    color: 'from-rose-500 to-amber-500', speciesIds: ['corail-rouge', 'eponges-med', 'posidonie', 'tortue-caouanne', 'gorgone-med', 'meduse-pelagia']
+    color: 'from-rose-500 to-amber-500', speciesIds: ['corail-rouge', 'posidonie', 'tortue-caouanne', 'gorgone-med', 'meduse-pelagia']
   },
   {
     id: 'atl', buttonNumber: 2, title: 'Atlantique & Bretagne : Laminaires',

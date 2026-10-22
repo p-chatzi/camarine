@@ -1,8 +1,8 @@
 // "Façades & Calques SST" dropdown: basin filter, map type, species trend, raster & base map.
 import { ChevronRight, Compass, Layers, Thermometer, X } from 'lucide-react';
 import { DATA_SOURCES } from '../../data/metadata';
-import { SPECIES_DATA } from '../../data/species';
 import type { MapSettings } from '../../hooks/useMapSettings';
+import { speciesForMode } from '../../lib/species';
 import type { BasinFilter } from '../../types';
 
 const BASIN_OPTIONS: { id: BasinFilter; label: string }[] = [
@@ -101,7 +101,7 @@ export function FilterPanel({ settings: s, onClose }: Props) {
                 onClick={() => s.setTrend('Tous')}
                 className={`px-3 py-2 rounded-xl text-xs font-semibold text-left transition-all ${s.trend === 'Tous' ? 'bg-slate-800 text-white' : 'bg-sky-50/80 text-slate-600 hover:bg-sky-100 border border-sky-200/60'}`}
               >
-                Toutes les espèces ({SPECIES_DATA.length})
+                Toutes les espèces ({speciesForMode(s.expert).length})
               </button>
               <button
                 onClick={() => s.setTrend('decline')}

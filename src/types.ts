@@ -14,23 +14,60 @@ export type ExportFormat = 'csv' | 'json';
 export type LatLon = [number, number];
 
 // ---- Static content --------------------------------------------------------
+/** Grand groupe affiché dans le catalogue expert. Les algues et le phytoplancton sont rangés en « flore ». */
+export type Kingdom = 'faune' | 'flore';
+
+/** 'public' = visible dans tous les modes ; 'expert' = visible uniquement en mode expert. */
+export type SpeciesAudience = 'public' | 'expert';
+
+/** Catégories de la Liste rouge UICN. 'NE' = aucune évaluation trouvée. */
+export type IucnCategory = 'CR' | 'EN' | 'VU' | 'NT' | 'LC' | 'DD' | 'NE';
+
+export interface IucnStatus {
+  category: IucnCategory;
+  /** Portée de l'évaluation, ex. « Mondiale » ou « Méditerranée (régionale) ». */
+  scope: string;
+  year?: number;
+  /** Lien vers l'évaluation (iucnredlist.org) ou le document UICN qui la publie. */
+  url?: string;
+}
+
+/** Solidité du lien entre canicules marines et l'effet observé, d'après les sources citées. */
+export type HeatEvidence = 'établi' | 'probable' | 'hypothèse';
+
+export interface SourceRef {
+  label: string;
+  url: string;
+}
+
 export interface SpeciesItem {
   id: string;
   name: string;
   scientificName: string;
+  kingdom: Kingdom;
+  audience: SpeciesAudience;
   basin: Basin;
   locationName: string;
+  /** Toujours en mer, le long des côtes ou au large (vérifié par script, voir SOURCES.md). */
   coords: LatLon;
   trend: 'decline' | 'proliferate';
   trendLabel: string;
+  /** Zone de présence / de prédilection. */
+  habitat: string;
+  /** Rôle écologique et importance (écologique, économique, patrimoniale). */
+  role: string;
+  iucn: IucnStatus;
+  heatEvidence: HeatEvidence;
+  sources: SourceRef[];
   criticalThreshold: string;
-  baseSst2015: number;
-  sst2026: number;
+  /** ⚠ Valeurs codées en dur (héritées du hackathon). Absentes pour les espèces ajoutées depuis. */
+  baseSst2015?: number;
+  sst2026?: number;
   mortalityRate: string;
   shortDesc: string;
   impactDetails: string;
   narrationText: string;
-  museumSection: string;
+  museumSection?: string;
 }
 
 export interface SpeciesImage {
