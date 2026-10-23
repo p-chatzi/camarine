@@ -3,7 +3,7 @@
 // - Comprendre / Partager: same chips, in the page flow.
 // - Below 768 px the 3 sections fold into one "current section ▾" button (bottom sheet on phones).
 // (Ambient sound and voice-over were removed on 22/10/2026: the audio guide comes later.)
-import { BookOpen, Check, ChevronDown, Compass, FlaskConical, Info, Share2, Waves, type LucideIcon } from 'lucide-react';
+import { BookOpen, Check, ChevronDown, Compass, FlaskConical, Info, MessagesSquare, Share2, Waves, type LucideIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
 import type { AppMode } from '../../types';
 import { Popover } from '../ui/Popover';
@@ -12,7 +12,8 @@ import { AboutContent } from './About';
 const TABS: { mode: AppMode; label: string; hint: string; icon: LucideIcon; activeClass: string }[] = [
   { mode: 'visualiser', label: 'Visualiser', hint: 'La carte des températures et des espèces', icon: Compass, activeClass: 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white shadow-sm shadow-sky-600/25' },
   { mode: 'comprendre', label: 'Comprendre', hint: 'Les canicules marines depuis 1982, la méthode', icon: BookOpen, activeClass: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm shadow-orange-500/25' },
-  { mode: 'partager', label: 'Partager', hint: 'Exporter les données, échanger', icon: Share2, activeClass: 'bg-gradient-to-r from-indigo-600 to-sky-600 text-white shadow-sm shadow-indigo-600/25' },
+  { mode: 'partager', label: 'Partager', hint: 'Exporter les données', icon: Share2, activeClass: 'bg-gradient-to-r from-indigo-600 to-sky-600 text-white shadow-sm shadow-indigo-600/25' },
+  { mode: 'forum', label: 'Forum', hint: 'Questions aux scientifiques, espèces, Pelagos, bons gestes', icon: MessagesSquare, activeClass: 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm shadow-emerald-600/25' },
 ];
 
 /** Shared look of every floating chip (header, map tools): glass, 44 px high. */

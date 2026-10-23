@@ -292,6 +292,13 @@ def login(body: LoginIn, request: Request, response: Response, db: Session = Dep
     return {"status": "ok"}
 
 
+@router.get("/mfa/methods")
+def mfa_pending_methods(request: Request, db: Session = Depends(get_db)) -> dict[str, Any]:
+    """Second factors available for the pending login (after an SSO redirect the page doesn't know them)."""
+    _, user = _challenge(request, db)
+    return {"methods": mfa_methods(db, user)}
+
+
 @router.post("/mfa/totp")
 def mfa_totp(body: CodeIn, request: Request, response: Response, db: Session = Depends(get_db), _: Current | None = Depends(csrf)) -> dict[str, Any]:
     row, user = _challenge(request, db)

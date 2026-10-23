@@ -1,23 +1,20 @@
 // Tab 3 "Partager": data export + community forum.
-import { Database } from 'lucide-react';
+import { Database, MessagesSquare } from 'lucide-react';
 import { useState } from 'react';
 import { buildExport, downloadExport, type ExportContext } from '../../lib/export';
 import type { CopernicusData } from '../../hooks/useCopernicusData';
 import type { MapSettings } from '../../hooks/useMapSettings';
-import type { ForumState } from '../../hooks/useForum';
 import type { ExportFormat } from '../../types';
 import { ExportPanel } from './ExportPanel';
 import { ExportPreviewModal } from './ExportPreviewModal';
-import { Forum } from './Forum';
 
 interface Props {
   data: CopernicusData;
   settings: MapSettings;
   exportContext: ExportContext;
-  forum: ForumState;
 }
 
-export function PartagerView({ data, settings, exportContext, forum }: Props) {
+export function PartagerView({ data, settings, exportContext }: Props) {
   const [previewFormat, setPreviewFormat] = useState<ExportFormat | null>(null);
 
   return (
@@ -28,7 +25,7 @@ export function PartagerView({ data, settings, exportContext, forum }: Props) {
             <Database className="w-6 h-6 text-indigo-600" /> Centre de Partage & Données
           </h2>
           <p className="text-sm text-slate-500 mt-1">
-            Exportez les séries temporelles Copernicus ou discutez des anomalies avec la communauté scientifique.
+            Exportez les séries temporelles Copernicus, ou échangez sur le forum.
           </p>
         </div>
 
@@ -39,7 +36,17 @@ export function PartagerView({ data, settings, exportContext, forum }: Props) {
             onDownload={(f) => downloadExport(f, exportContext)}
             onPreview={() => setPreviewFormat('json')}
           />
-          <Forum forum={forum} />
+          <a
+            href="#/forum"
+            className="lg:col-span-2 block bg-white border border-emerald-200 rounded-2xl p-5 shadow-sm hover:border-emerald-400 transition-colors"
+          >
+            <span className="flex items-center gap-2 text-lg font-bold text-slate-900">
+              <MessagesSquare className="w-5 h-5 text-emerald-700" aria-hidden="true" /> Forum
+            </span>
+            <span className="block mt-1 text-sm text-slate-600">
+              Posez vos questions aux scientifiques, discutez d’une espèce ou de la zone Pelagos, partagez les bons gestes et vos suggestions.
+            </span>
+          </a>
         </div>
       </div>
 

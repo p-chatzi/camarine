@@ -1,6 +1,6 @@
 // Right-side card shown when a species pin is clicked: photos, critical threshold, impact text,
 // then the species sheet (group, IUCN status, habitat, role, sources).
-import { AlertTriangle, ArrowLeft, BookOpen, ExternalLink, ImageOff, MapPin, X } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, BookOpen, ExternalLink, ImageOff, MapPin, MessagesSquare, X } from 'lucide-react';
 import { useEffect, useRef, type ReactNode } from 'react';
 import { useSpeciesCarousel } from '../../hooks/useSpeciesCarousel';
 import { HEAT_EVIDENCE_LABELS, IUCN_BADGE_CLASSES, IUCN_LABELS, KINGDOM_LABELS } from '../../lib/species';
@@ -273,6 +273,12 @@ export function SpeciesCard({ species, images, imagesLoading, year, heatFactor, 
             <p className="text-xs text-slate-700 leading-relaxed">{species.impactDetails}</p>
           </div>
           <SpeciesSheet species={species} />
+          <a
+            href={`#/forum/rubrique/espece-${species.id}`}
+            className="tap flex items-center justify-center gap-2 min-h-11 rounded-xl border border-emerald-300 bg-emerald-50 text-sm font-semibold text-emerald-900 hover:bg-emerald-100"
+          >
+            <MessagesSquare className="w-4 h-4" aria-hidden="true" /> Discuter de cette espèce sur le forum
+          </a>
         </div>
       </div>
     </aside>

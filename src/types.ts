@@ -1,7 +1,7 @@
 // Shared types used across the app. If a shape crosses a file boundary, it lives here.
 
 // ---- UI state --------------------------------------------------------------
-export type AppMode = 'visualiser' | 'comprendre' | 'partager';
+export type AppMode = 'visualiser' | 'comprendre' | 'partager' | 'forum';
 export type Basin = 'Méditerranée' | 'Atlantique' | 'Manche';
 /** Protected marine area offered next to the basins in the "Façades" filter. */
 export type MarineZone = 'Pelagos';

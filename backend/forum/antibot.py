@@ -24,7 +24,7 @@ from .config import b64, get_settings
 
 DIFFICULTY = 18  # leading zero bits ≈ 260 000 hashes on average
 CHALLENGE_TTL_S = 600
-MIN_FORM_MS = 2500
+MIN_FORM_MS = 800  # below: almost certainly a script (a password manager + a click takes longer)
 
 _used: dict[str, float] = {}
 _used_lock = threading.Lock()

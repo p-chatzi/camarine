@@ -27,6 +27,8 @@ Le serveur de développement Vite redirige (proxy) `/api` vers ce backend. Le fr
 
 **Nouveau sur le code ? Lisez [ARCHITECTURE.md](ARCHITECTURE.md)** — ce document détaille chaque dossier, indique quel fichier modifier pour les changements courants et liste les problèmes connus.
 
+**Le forum (comptes, double authentification, SSO, RGPD) : voir [FORUM.md](FORUM.md).**
+
 **D'où viennent les données et les textes ? Voir [SOURCES.md](SOURCES.md)** — Copernicus Marine, contour IGN, statuts UICN et publications citées pour chaque espèce, sources prévues (PNPC, MedECC, INPN, Ifremer).
 
 Si la boîte à outils demande des identifiants, authentifiez-vous une fois avec `copernicusmarine login` avant de démarrer le backend. Ne mettez jamais d'identifiants dans le frontend et ne les commitez jamais dans le dépôt.

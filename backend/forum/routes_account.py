@@ -101,10 +101,10 @@ def me_payload(db: Session, cur: Current) -> dict[str, Any]:
 
 @router.get("")
 def me(cur: Current | None = Depends(current), db: Session = Depends(get_db)) -> dict[str, Any]:
-    providers = [{"id": p.name, "label": p.label} for p in sso.providers().values()]
+    site = {"providers": [{"id": p.name, "label": p.label} for p in sso.providers().values()], "privacy_contact": get_settings().privacy_contact}
     if cur is None:
-        return {"user": None, "providers": providers}
-    return {**me_payload(db, cur), "providers": providers}
+        return {"user": None, **site}
+    return {**me_payload(db, cur), **site}
 
 
 @router.patch("")

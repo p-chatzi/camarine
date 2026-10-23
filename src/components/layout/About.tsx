@@ -73,7 +73,11 @@ export function AboutContent() {
           ))}
         </ul>
         <p className="text-xs text-slate-500">
-          Une erreur sur une fiche espèce ? Bouton « Signaler » sur la fiche. Sources détaillées : fichier SOURCES.md du dépôt.
+          Une erreur sur une fiche espèce ? Bouton « Signaler » sur la fiche. Sources détaillées : fichier SOURCES.md du dépôt.{' '}
+          <a href="#/forum/confidentialite" className="underline underline-offset-2">
+            Confidentialité
+          </a>
+          .
         </p>
       </section>
     </div>

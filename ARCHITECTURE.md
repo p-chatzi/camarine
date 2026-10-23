@@ -30,7 +30,8 @@ Copernicus ─► copernicus_pipeline.py + hobday.py ─► backend/*_service.py
 | `components/visualiser/` | Onglet 1 : filtres, légende, fiche espèce, encart Pelagos, catalogue expert (`SpeciesCatalog`) + formulaire de suggestion |
 | `components/ui/`         | `Popover` : le seul composant de menu / pop-up (panneau bas sur téléphone, menu déroulant ailleurs ; focus, Échap, clic extérieur) |                                                                        |
 | `components/comprendre/` | Onglet 2 : période d'analyse, KPIs, explicatif Hobday, historique des canicules (vues « Par année » `HeatwaveYearBars` et « Calendrier »), graphique quotidien, tableau |                                                                        |
-| `components/partager/`   | Onglet 3 : panneau d'export, modale d'aperçu, forum                                                     |                                                                        |
+| `components/partager/`   | Onglet 3 : panneau d'export, modale d'aperçu, lien vers le forum                                        |
+| `components/forum/` + `forum/` | Onglet 4 « Forum » : pages (`ForumView`, `ThreadPages`, `AuthPages`, `AccountPage`, `AdminPage`, `PrivacyPage`) ; `src/forum/` = appels API, routage `#/forum/…`, anti-robot (Web Worker), WebAuthn. Voir [FORUM.md](FORUM.md) | Backend dans `backend/forum/` |                                                                        |
 | `App.tsx`                | Détient l'état partagé entre les onglets, choisit quel onglet afficher                                  | Gardez-le court : connectez les éléments, n'implémentez pas de logique |
 
 ### Où dois-je aller pour modifier…
@@ -64,6 +65,7 @@ Les dossiers correspondent aux fonctionnalités, ce qui permet de travailler en 
 | `main.py`        | Routes uniquement (`/api/health`, `/api/mhw`, `/api/map`, `POST /api/suggestions`) et configuration CORS |
 | `mhw_service.py` | Série temporelle locale + événements Hobday                                                              |
 | `suggestion_service.py` | Suggestions d'espèces : nettoyage du texte, limite anti-flood (5 / 10 min par client, en mémoire), ajout en JSON Lines dans `suggestions_data/` ; aucune IP ni donnée personnelle stockée |
+| `forum/` | Forum : comptes, MFA, SSO, rubriques, Q&R, modération, RGPD — détail dans [FORUM.md](FORUM.md) |
 | `report_service.py` | « Signaler une erreur » sur une fiche espèce (`POST /api/reports`) : validation (espèce, type, message ≥ 10 caractères, lien http(s) facultatif), anti-flood 5 / 10 min, ajout dans `suggestions_data/reports.jsonl` |
 | `notify.py` | Prévient le mainteneur d'un signalement : e-mail (SMTP) et/ou notification push (URL type ntfy.sh), **configurés uniquement par variables d'environnement** ; envoi en arrière-plan, 20 notifications / heure au plus ; sans configuration, le signalement est seulement enregistré |
 | `map_service.py` | Grille SST pour un jour donné ; recule jusqu'à 3 jours en arrière lorsque les données NRT sont en retard |

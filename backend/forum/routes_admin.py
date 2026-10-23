@@ -201,7 +201,12 @@ def update_user(user_id: int, body: UserUpdateIn, request: Request, cur: Current
 @router.get("/audit")
 def audit_log(page: int = 1, _: Current = Depends(require_admin), db: Session = Depends(get_db)) -> list[dict[str, Any]]:
     rows = db.scalars(select(AuditLog).options(selectinload(AuditLog.actor)).order_by(AuditLog.id.desc()).offset((max(1, page) - 1) * 50).limit(50))
-    return [{"id": a.id, "actor": author(a.actor), "action": a.action, "target": a.target, "detail": a.detail, "at": iso(a.created_at)} for a in rows]
+    def actor(a: AuditLog) -> dict[str, Any]:
+        if a.actor_id is None and a.action.endswith("_cli"):
+            return {"id": None, "name": "Serveur (ligne de commande)", "role": "admin"}
+        return author(a.actor)
+
+    return [{"id": a.id, "actor": actor(a), "action": a.action, "target": a.target, "detail": a.detail, "at": iso(a.created_at)} for a in rows]
 
 
 @router.get("/security-events")
