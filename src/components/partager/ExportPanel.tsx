@@ -43,8 +43,8 @@ function DayPicker({ data }: { data: CopernicusData }) {
         <input
           id="export-day"
           type="date"
-          min={data.startDate}
-          max={data.endDate}
+          min={data.firstDay}
+          max={data.lastDay}
           value={draft}
           onChange={(e) => {
             setDraft(e.target.value);
@@ -72,19 +72,14 @@ function PeriodPicker({ data }: { data: CopernicusData }) {
       <div className="flex items-center gap-1.5">
         <div className="flex-1 space-y-1">
           <label htmlFor="export-start" className="text-[10px] font-semibold text-slate-500">Du :</label>
-          <input id="export-start" type="date" value={data.startDate} onChange={(e) => data.setStartDate(e.target.value)} className={inputClass} />
+          <input id="export-start" type="date" value={data.averageStart} min={data.firstDay} max={data.averageEnd} onChange={(e) => data.setAverageStart(e.target.value)} className={inputClass} />
         </div>
         <div className="flex-1 space-y-1">
           <label htmlFor="export-end" className="text-[10px] font-semibold text-slate-500">Au :</label>
-          <input id="export-end" type="date" value={data.endDate} onChange={(e) => data.setEndDate(e.target.value)} className={inputClass} />
+          <input id="export-end" type="date" value={data.averageEnd} min={data.averageStart} max={data.lastDay} onChange={(e) => data.setAverageEnd(e.target.value)} className={inputClass} />
         </div>
       </div>
-      <button
-        onClick={data.reload}
-        className="tap w-full py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold shadow-xs transition-all cursor-pointer disabled:opacity-50"
-      >
-        Actualiser les données
-      </button>
+      <p className="text-[10px] text-slate-500">Dans les données chargées : du {data.firstDay} au {data.lastDay}.</p>
     </div>
   );
 }

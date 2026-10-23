@@ -39,8 +39,6 @@ RATE_WINDOW_S = 600
 MAX_TRACKED_CLIENTS = 10_000
 
 _write_lock = threading.Lock()
-_rate_lock = threading.Lock()
-_recent: OrderedDict[str, deque[float]] = OrderedDict()
 
 _FORMULA_PREFIXES = ("=", "+", "-", "@")
 _MANY_BLANK_LINES = re.compile(r"\n{3,}")
@@ -106,17 +104,33 @@ def append_record(record: dict[str, str], path: Path | None = None) -> None:
             os.close(fd)
 
 
+class RateLimiter:
+    """Sliding-window rate limit per client key. Keys live in memory only, never written to disk;
+    at most `max_clients` keys are kept (least recently seen forgotten first)."""
+
+    def __init__(self, limit: int, window_s: float, max_clients: int = MAX_TRACKED_CLIENTS) -> None:
+        self.limit, self.window_s, self.max_clients = limit, window_s, max_clients
+        self._lock = threading.Lock()
+        self._recent: OrderedDict[str, deque[float]] = OrderedDict()
+
+    def allow(self, client_key: str, now: float | None = None) -> bool:
+        t = time.monotonic() if now is None else now
+        with self._lock:
+            window = self._recent.pop(client_key, None) or deque()
+            while window and t - window[0] > self.window_s:
+                window.popleft()
+            allowed = len(window) < self.limit
+            if allowed:
+                window.append(t)
+            self._recent[client_key] = window  # most recently seen at the end
+            while len(self._recent) > self.max_clients:
+                self._recent.popitem(last=False)
+            return allowed
+
+
+_limiter = RateLimiter(RATE_LIMIT, RATE_WINDOW_S)
+
+
 def allow_request(client_key: str, now: float | None = None) -> bool:
-    """Sliding-window rate limit per client key. Keys live in memory only, never written to disk."""
-    t = time.monotonic() if now is None else now
-    with _rate_lock:
-        window = _recent.pop(client_key, None) or deque()
-        while window and t - window[0] > RATE_WINDOW_S:
-            window.popleft()
-        allowed = len(window) < RATE_LIMIT
-        if allowed:
-            window.append(t)
-        _recent[client_key] = window  # most recently seen at the end
-        while len(_recent) > MAX_TRACKED_CLIENTS:
-            _recent.popitem(last=False)  # forget the least recently seen client
-        return allowed
+    """Anti-flood for suggestions: RATE_LIMIT per client per RATE_WINDOW_S seconds."""
+    return _limiter.allow(client_key, now)

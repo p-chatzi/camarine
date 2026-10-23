@@ -157,7 +157,7 @@ export function VisualiserView(props: Props) {
         colorMode={settings.colorMode}
         dataType={settings.dataType}
         telemetry={data.telemetry}
-        records={data.records}
+        records={settings.colorMode === 'average' ? data.averageRecords : data.records}
       />
 
       {selectedSpecies && (

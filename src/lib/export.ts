@@ -29,11 +29,21 @@ function speciesCategory(ctx: ExportContext, sst: number) {
   );
 }
 
+/** Records and events of the chosen period (all of them in daily mode). */
+function periodData(ctx: ExportContext) {
+  const records = ctx.pipeline?.records || [];
+  const events = ctx.pipeline?.events || [];
+  if (ctx.colorMode !== 'average') return { records, events };
+  return {
+    records: records.filter((r) => r.date >= ctx.startDate && r.date <= ctx.endDate),
+    events: events.filter((ev) => ev.end >= ctx.startDate && ev.start <= ctx.endDate),
+  };
+}
+
 export function buildCsv(ctx: ExportContext): string {
   const { colorMode, telemetry } = ctx;
   const activeDate = colorMode === 'daily' ? telemetry?.date || ctx.selectedDate : 'Période globale';
-  const records = ctx.pipeline?.records || [];
-  const events = ctx.pipeline?.events || [];
+  const { records, events } = periodData(ctx);
 
   const metadata = [
     `# ============================================================================`,
@@ -107,12 +117,10 @@ export function buildJson(ctx: ExportContext): string {
   const activeDate = isDaily ? telemetry?.date || ctx.selectedDate : null;
 
   // In daily mode, keep only the selected day and the events that cover it.
-  const records = isDaily && pipeline?.records
-    ? pipeline.records.filter((r) => r.date === activeDate)
-    : pipeline?.records || [];
+  const records = isDaily && pipeline?.records ? pipeline.records.filter((r) => r.date === activeDate) : periodData(ctx).records;
   const events = isDaily && pipeline?.events
     ? pipeline.events.filter((ev) => activeDate! >= ev.start && activeDate! <= ev.end)
-    : pipeline?.events || [];
+    : periodData(ctx).events;
 
   const payload = {
     project: 'Camarine - Ocean Hackathon',

@@ -5,7 +5,7 @@ import { CalendarDays, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react
 import { useRef, type ReactNode } from 'react';
 import type { CopernicusData } from '../../hooks/useCopernicusData';
 import type { MapSettings } from '../../hooks/useMapSettings';
-import { toIsoLocal } from '../../lib/dates';
+import { addDaysIso } from '../../lib/dates';
 import { Popover } from '../ui/Popover';
 import { CHIP } from './Header';
 import { Telemetry } from './Telemetry';
@@ -19,30 +19,34 @@ function shortDate(iso: string): string {
   return new Date(`${iso}T00:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-function addDays(iso: string, days: number): string {
-  const [y, m, d] = iso.split('-').map(Number);
-  return toIsoLocal(new Date(y, m - 1, d + days));
+/** Two date fields (start ≤ end) inside [min, max]. The data hook clamps typed values too. */
+function RangeFields(props: { start: string; end: string; min: string; max: string; onStart: (v: string) => void; onEnd: (v: string) => void }) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      <label>
+        <span className={LABEL}>Du</span>
+        <input type="date" value={props.start} min={props.min} max={props.end} onChange={(e) => props.onStart(e.target.value)} className={INPUT} />
+      </label>
+      <label>
+        <span className={LABEL}>Au</span>
+        <input type="date" value={props.end} min={props.start} max={props.max} onChange={(e) => props.onEnd(e.target.value)} className={INPUT} />
+      </label>
+    </div>
+  );
 }
 
-function PeriodFields({ data }: { data: CopernicusData }) {
+/** Analysis period (Comprendre): 1982 → today at most, reloads the series. */
+function AnalysisFields({ data }: { data: CopernicusData }) {
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2">
-        <label>
-          <span className={LABEL}>Du</span>
-          <input type="date" value={data.startDate} max={data.endDate} onChange={(e) => e.target.value && data.setStartDate(e.target.value)} className={INPUT} />
-        </label>
-        <label>
-          <span className={LABEL}>Au</span>
-          <input type="date" value={data.endDate} min={data.startDate} onChange={(e) => e.target.value && data.setEndDate(e.target.value)} className={INPUT} />
-        </label>
-      </div>
+      <RangeFields start={data.startDate} end={data.endDate} min={data.dataStartDate} max={data.today} onStart={data.setStartDate} onEnd={data.setEndDate} />
       <button
         onClick={data.reload}
         className="tap w-full h-11 flex items-center justify-center gap-2 bg-sky-700 hover:bg-sky-800 text-white rounded-xl text-sm font-bold shadow-sm transition-colors"
       >
         <RefreshCw className="w-4 h-4" aria-hidden="true" /> Recharger la période
       </button>
+      <p className="text-[11px] text-slate-500">Données disponibles du {shortDate(data.dataStartDate)} à aujourd’hui.</p>
     </div>
   );
 }
@@ -65,8 +69,8 @@ export function MapDateControl({ data, settings, isLoading, open, onOpenChange }
   const isDaily = settings.colorMode === 'daily';
   const day = data.selectedDate || '';
   const telemetry = settings.expert ? data.telemetry : null;
-  const canPrev = !!day && day > data.startDate;
-  const canNext = !!day && day < data.endDate;
+  const canPrev = !!day && day > data.firstDay;
+  const canNext = !!day && day < data.lastDay;
 
   return (
     <>
@@ -76,7 +80,7 @@ export function MapDateControl({ data, settings, isLoading, open, onOpenChange }
         aria-expanded={open}
         aria-controls="map-date"
         aria-haspopup="dialog"
-        aria-label={isDaily ? `Date de la carte : ${shortDate(day)}. Changer` : `Moyenne du ${shortDate(data.startDate)} au ${shortDate(data.endDate)}. Changer`}
+        aria-label={isDaily ? `Date de la carte : ${shortDate(day)}. Changer` : `Moyenne du ${shortDate(data.averageStart)} au ${shortDate(data.averageEnd)}. Changer`}
         className={`${CHIP} flex items-center gap-2 px-3 text-sm font-bold text-slate-800 hover:bg-white`}
       >
         {isLoading ? (
@@ -88,7 +92,7 @@ export function MapDateControl({ data, settings, isLoading, open, onOpenChange }
           <span className="whitespace-nowrap">{shortDate(day)}</span>
         ) : (
           <span className="whitespace-nowrap">
-            Moyenne<span className="hidden md:inline"> {shortDate(data.startDate)} → {shortDate(data.endDate)}</span>
+            Moyenne<span className="hidden md:inline"> {shortDate(data.averageStart)} → {shortDate(data.averageEnd)}</span>
           </span>
         )}
         {telemetry && (
@@ -133,16 +137,16 @@ export function MapDateControl({ data, settings, isLoading, open, onOpenChange }
                 </label>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => canPrev && data.selectDate(addDays(day, -1))}
+                    onClick={() => canPrev && data.selectDate(addDaysIso(day, -1))}
                     disabled={!canPrev}
                     aria-label="Jour précédent"
                     className="tap h-11 w-11 shrink-0 flex items-center justify-center rounded-xl border border-sky-300 bg-white text-sky-800 hover:bg-sky-50 disabled:opacity-40"
                   >
                     <ChevronLeft className="w-5 h-5" aria-hidden="true" />
                   </button>
-                  <input id="map-day" type="date" min={data.startDate} max={data.endDate} value={day} onChange={(e) => data.selectDate(e.target.value)} className={INPUT} />
+                  <input id="map-day" type="date" min={data.firstDay} max={data.lastDay} value={day} onChange={(e) => data.selectDate(e.target.value)} className={INPUT} />
                   <button
-                    onClick={() => canNext && data.selectDate(addDays(day, 1))}
+                    onClick={() => canNext && data.selectDate(addDaysIso(day, 1))}
                     disabled={!canNext}
                     aria-label="Jour suivant"
                     className="tap h-11 w-11 shrink-0 flex items-center justify-center rounded-xl border border-sky-300 bg-white text-sky-800 hover:bg-sky-50 disabled:opacity-40"
@@ -153,8 +157,24 @@ export function MapDateControl({ data, settings, isLoading, open, onOpenChange }
               </div>
             ) : (
               <div>
-                <p className={LABEL}>Moyenne sur la période d’analyse</p>
-                <PeriodFields data={data} />
+                <p className={LABEL}>Moyenne sur la période</p>
+                <RangeFields
+                  start={data.averageStart}
+                  end={data.averageEnd}
+                  min={data.firstDay}
+                  max={data.lastDay}
+                  onStart={data.setAverageStart}
+                  onEnd={data.setAverageEnd}
+                />
+                <button
+                  onClick={data.resetAverage}
+                  className="tap mt-2 h-10 w-full rounded-xl border border-sky-300 bg-white text-sm font-semibold text-sky-800 hover:bg-sky-50"
+                >
+                  Revenir à la dernière année
+                </button>
+                <p className="mt-2 text-[11px] text-slate-500">
+                  Données du {shortDate(data.firstDay)} au {shortDate(data.lastDay)}.
+                </p>
               </div>
             )}
 
@@ -194,7 +214,7 @@ export function PeriodControl({ data, open, onOpenChange }: PeriodProps) {
         <Popover id="analysis-period" label="Période d’analyse" anchorRef={buttonRef} onClose={() => onOpenChange(false)} width={360}>
           <div className="p-4 pt-2 sm:pt-4">
             <PanelTitle>Période d’analyse</PanelTitle>
-            <PeriodFields data={data} />
+            <AnalysisFields data={data} />
           </div>
         </Popover>
       )}

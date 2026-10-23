@@ -3,11 +3,11 @@
 // - Comprendre / Partager: same chips, in the page flow.
 // - Below 768 px the 3 sections fold into one "current section ▾" button (bottom sheet on phones).
 // (Ambient sound and voice-over were removed on 22/10/2026: the audio guide comes later.)
-import { BookOpen, Check, ChevronDown, Compass, FlaskConical, Share2, Waves, type LucideIcon } from 'lucide-react';
+import { BookOpen, Check, ChevronDown, Compass, FlaskConical, Info, Share2, Waves, type LucideIcon } from 'lucide-react';
 import { useRef, useState } from 'react';
-import { DATA_SOURCES } from '../../data/metadata';
 import type { AppMode } from '../../types';
 import { Popover } from '../ui/Popover';
+import { AboutContent } from './About';
 
 const TABS: { mode: AppMode; label: string; hint: string; icon: LucideIcon; activeClass: string }[] = [
   { mode: 'visualiser', label: 'Visualiser', hint: 'La carte des températures et des espèces', icon: Compass, activeClass: 'bg-gradient-to-r from-sky-600 to-cyan-600 text-white shadow-sm shadow-sky-600/25' },
@@ -36,7 +36,7 @@ function Logo() {
   );
 }
 
-function SectionMenu({ mode, onChangeMode, expert }: Pick<Props, 'mode' | 'onChangeMode' | 'expert'>) {
+function SectionMenu({ mode, onChangeMode, onAbout }: Pick<Props, 'mode' | 'onChangeMode'> & { onAbout: () => void }) {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const current = TABS.find((t) => t.mode === mode) ?? TABS[0];
@@ -63,7 +63,6 @@ function SectionMenu({ mode, onChangeMode, expert }: Pick<Props, 'mode' | 'onCha
             <p className="px-2 pb-2 text-xs text-slate-500">
               <span className="block text-sm font-extrabold text-sky-950">Camarine</span>
               Sentinelle des Canicules Marines
-              {expert && <span className="block">Données {DATA_SOURCES.product}</span>}
             </p>
             <ul className="space-y-1.5">
               {TABS.map(({ mode: tabMode, label, hint, icon: Icon }) => {
@@ -91,6 +90,15 @@ function SectionMenu({ mode, onChangeMode, expert }: Pick<Props, 'mode' | 'onCha
                 );
               })}
             </ul>
+            <button
+              onClick={() => {
+                setOpen(false);
+                onAbout();
+              }}
+              className="mt-2 w-full min-h-11 flex items-center gap-3 px-3 rounded-2xl text-left text-sm font-semibold text-slate-700 border-t border-sky-100 hover:bg-sky-50/70"
+            >
+              <Info className="w-5 h-5 text-sky-700 shrink-0" aria-hidden="true" /> À propos, équipe et crédits
+            </button>
           </div>
         </Popover>
       )}
@@ -99,23 +107,50 @@ function SectionMenu({ mode, onChangeMode, expert }: Pick<Props, 'mode' | 'onCha
 }
 
 export function Header({ mode, onChangeMode, expert, onToggleExpert, overlay }: Props) {
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const logoRef = useRef<HTMLButtonElement>(null);
+  const aboutButtonRef = useRef<HTMLButtonElement>(null);
+  // The pop-up hangs under whichever button opened it (logo, or the visible "À propos" from 768 px).
+  const [aboutAnchor, setAboutAnchor] = useState<typeof logoRef>(logoRef);
+  const toggleAbout = (anchor: typeof logoRef) => {
+    setAboutAnchor(anchor);
+    setAboutOpen((v) => !v);
+  };
   return (
     <header
       className={`${overlay ? 'absolute top-0 inset-x-0' : 'relative shrink-0'} z-40 pointer-events-none p-3 flex items-center justify-between gap-2`}
     >
       <div className={`${CHIP} min-w-0 flex items-center gap-2 pl-1.5 pr-1`}>
-        <Logo />
-        <div className="hidden lg:block min-w-0 pr-1">
-          <h1 className="text-sm font-extrabold tracking-tight text-sky-950 leading-tight">Camarine</h1>
-          <p className="text-[11px] text-slate-500 truncate leading-tight">
-            Sentinelle des Canicules Marines
-            {expert && <span className="hidden 2xl:inline"> • Données {DATA_SOURCES.product}</span>}
-          </p>
-        </div>
-        <h1 className="sr-only lg:hidden">Camarine, sentinelle des canicules marines</h1>
+        {/* Logo (+ name from 1024 px) = "À propos": story, team, credits. */}
+        <button
+          ref={logoRef}
+          onClick={() => toggleAbout(logoRef)}
+          aria-expanded={aboutOpen}
+          aria-controls="about-camarine"
+          aria-haspopup="dialog"
+          title="À propos de Camarine : Ocean Hackathon, équipe, crédits"
+          className="hit-44 h-9 min-w-11 flex items-center justify-center lg:justify-start gap-2 rounded-xl lg:pr-1 hover:bg-sky-100/60 text-left"
+        >
+          <Logo />
+          <span className="hidden lg:block min-w-0 pr-1">
+            <span className="block text-sm font-extrabold tracking-tight text-sky-950 leading-tight">Camarine</span>
+            <span className="block text-[11px] text-slate-500 truncate leading-tight">Sentinelle des Canicules Marines</span>
+          </span>
+          <span className="sr-only lg:hidden">Camarine, sentinelle des canicules marines.</span>
+          <span className="sr-only">À propos</span>
+        </button>
+        <h1 className="sr-only">Camarine, sentinelle des canicules marines</h1>
+        {aboutOpen && (
+          <Popover id="about-camarine" label="À propos de Camarine" anchorRef={aboutAnchor} onClose={() => setAboutOpen(false)} width={480}>
+            <AboutContent />
+          </Popover>
+        )}
 
         <div className="md:hidden">
-          <SectionMenu mode={mode} onChangeMode={onChangeMode} expert={expert} />
+          <SectionMenu mode={mode} onChangeMode={onChangeMode} onAbout={() => {
+              setAboutAnchor(logoRef);
+              setAboutOpen(true);
+            }} />
         </div>
         <nav aria-label="Sections" className="hidden md:flex items-center gap-1">
           {TABS.map(({ mode: tabMode, label, icon: Icon, activeClass }) => (
@@ -132,6 +167,17 @@ export function Header({ mode, onChangeMode, expert, onToggleExpert, overlay }: 
             </button>
           ))}
         </nav>
+        <button
+          ref={aboutButtonRef}
+          onClick={() => toggleAbout(aboutButtonRef)}
+          aria-expanded={aboutOpen}
+          aria-controls="about-camarine"
+          aria-haspopup="dialog"
+          className="hidden md:flex hit-44 h-9 items-center gap-1.5 px-3 ml-0.5 border-l border-sky-200/80 rounded-r-xl text-sm font-semibold text-slate-600 hover:text-sky-950 hover:bg-sky-100/70"
+        >
+          <Info className="w-4 h-4 shrink-0" aria-hidden="true" />
+          À propos
+        </button>
       </div>
 
       <button

@@ -7,6 +7,9 @@ export const PIPELINE_LOCATION = { lat: 43, lon: 6, radius: 0.05 };
 /** First date offered by the period picker. */
 export const DEFAULT_START_DATE = '1982-01-01';
 
+/** Map "Moyenne période" by default: the last year of data (users can pick any range). */
+export const AVERAGE_DEFAULT_DAYS = 365;
+
 /** Hobday climatology baseline (WMO 30-year normal). */
 export const BASELINE = { start: 1991, end: 2020 };
 

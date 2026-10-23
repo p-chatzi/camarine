@@ -5,6 +5,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { useSpeciesCarousel } from '../../hooks/useSpeciesCarousel';
 import { HEAT_EVIDENCE_LABELS, IUCN_BADGE_CLASSES, IUCN_LABELS, KINGDOM_LABELS } from '../../lib/species';
 import type { SpeciesImage, SpeciesItem } from '../../types';
+import { ReportButton } from './ReportButton';
 
 interface Props {
   species: SpeciesItem;
@@ -228,6 +229,8 @@ export function SpeciesCard({ species, images, imagesLoading, year, heatFactor, 
             </h2>
             <p className="text-sm italic text-slate-500">{species.scientificName}</p>
           </div>
+          <div className="flex items-center gap-2 shrink-0">
+          <ReportButton species={species} />
           <button
             onClick={onClose}
             aria-label="Fermer la fiche"
@@ -235,6 +238,7 @@ export function SpeciesCard({ species, images, imagesLoading, year, heatFactor, 
           >
             <X className="w-5 h-5" aria-hidden="true" />
           </button>
+          </div>
         </div>
       </div>
 

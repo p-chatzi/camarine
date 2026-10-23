@@ -80,7 +80,7 @@ class AppendRecordTest(unittest.TestCase):
 
 class RateLimitTest(unittest.TestCase):
     def setUp(self):
-        svc._recent.clear()
+        svc._limiter._recent.clear()
 
     def test_sliding_window(self):
         allowed = [svc.allow_request("client", now=float(i)) for i in range(svc.RATE_LIMIT + 1)]
@@ -88,10 +88,10 @@ class RateLimitTest(unittest.TestCase):
         self.assertTrue(svc.allow_request("client", now=svc.RATE_WINDOW_S + 10.0))
 
     def test_memory_is_bounded(self):
-        with mock.patch.object(svc, "MAX_TRACKED_CLIENTS", 3):
+        with mock.patch.object(svc._limiter, "max_clients", 3):
             for i in range(10):
                 svc.allow_request(f"client-{i}", now=0.0)
-            self.assertEqual(list(svc._recent), ["client-7", "client-8", "client-9"])
+            self.assertEqual(list(svc._limiter._recent), ["client-7", "client-8", "client-9"])
 
 
 if __name__ == "__main__":

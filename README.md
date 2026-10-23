@@ -45,7 +45,23 @@ python scripts/build_pelagos.py ne_10m_land.geojson  # régénère la zone Pelag
 
 `npm run build` génère un site statique dans `dist/`. Il appelle `/api/...` sur sa propre origine : servez donc `dist/` et le backend FastAPI derrière le même domaine (ex. avec nginx : `/` → `dist/`, `/api` → uvicorn). Si l'API est hébergée sur un autre domaine, définissez `ALLOWED_ORIGINS=https://votre-site` pour le backend. Les identifiants Copernicus restent sur le serveur (`copernicusmarine login` ou variables d'environnement), jamais dans le frontend.
 
-Le bouton **Mode expert** (dans l'en-tête) affiche la télémétrie brute du jour (dans la pop-up de date), les identifiants de produits et les sources de données, ainsi que le **catalogue des espèces** (menu à droite : faune / flore, recherche par nom, statut UICN, formulaire « Une espèce manque ? ») et les espèces réservées aux experts sur la carte. Il est toujours désactivé au chargement de la page ; la carte s'ouvre en « Mode Impact Biologique ». Les suggestions sont enregistrées côté serveur dans `suggestions_data/suggestions.jsonl` (ignoré par git, sans donnée personnelle). Le guide audiovisuel (voix off, ambiance sonore, visite guidée), les kits pédagogiques, les quiz, les sessions de classe et le déploiement en mode kiosque restent des travaux prévus sur la feuille de route ultérieure.
+Le bouton **Mode expert** (dans l'en-tête) affiche la télémétrie brute du jour (dans la pop-up de date), les identifiants de produits et les sources de données, ainsi que le **catalogue des espèces** (menu à droite : faune / flore, recherche par nom, statut UICN, formulaire « Une espèce manque ? ») et les espèces réservées aux experts sur la carte. Il est toujours désactivé au chargement de la page ; la carte s'ouvre en « Mode Impact Biologique ». Le logo ouvre « À propos » (Ocean Hackathon, équipe, crédits). Les suggestions sont enregistrées côté serveur dans `suggestions_data/suggestions.jsonl` (ignoré par git, sans donnée personnelle). Le guide audiovisuel (voix off, ambiance sonore, visite guidée), les kits pédagogiques, les quiz, les sessions de classe et le déploiement en mode kiosque restent des travaux prévus sur la feuille de route ultérieure.
+
+## Notifications des signalements
+
+Sur chaque fiche espèce, le bouton **Signaler** permet de déclarer une donnée erronée, une source manquante ou une source erronée / un lien mort. Chaque signalement est enregistré dans `suggestions_data/reports.jsonl` (ignoré par git, sans donnée personnelle) et, si c'est configuré, vous êtes prévenu. Aucune adresse ni mot de passe n'est écrit dans le code : tout passe par des variables d'environnement du backend.
+
+Par e-mail (avec une boîte créée pour Camarine et un mot de passe d'application) :
+
+```sh
+export CAMARINE_SMTP_HOST=smtp.example.org   # serveur SMTP de cette boîte
+export CAMARINE_SMTP_PORT=587                # 587 (STARTTLS) ou 465 (SSL)
+export CAMARINE_SMTP_USER=...                # identifiant de la boîte
+export CAMARINE_SMTP_PASSWORD=...            # mot de passe d'application
+export CAMARINE_NOTIFY_TO=...                # destinataire(s), séparés par des virgules
+```
+
+Ou par notification push, sans boîte mail (par ex. l'application [ntfy](https://ntfy.sh), avec un nom de sujet difficile à deviner) : `export CAMARINE_NOTIFY_WEBHOOK=https://ntfy.sh/<sujet-secret>`. Les deux peuvent être actifs en même temps. Au plus 20 notifications par heure ; un serveur mail en panne n'empêche pas l'enregistrement du signalement.
 
 ## Pipeline Copernicus Marine
 

@@ -32,8 +32,9 @@ export default function App() {
 
   const exportContext: ExportContext = {
     colorMode: settings.colorMode,
-    startDate: data.startDate,
-    endDate: data.endDate,
+    // "Période" exports = the averaging window of the map (last year by default).
+    startDate: data.averageStart,
+    endDate: data.averageEnd,
     selectedDate: data.selectedDate,
     telemetry: data.telemetry,
     pipeline: data.pipeline,

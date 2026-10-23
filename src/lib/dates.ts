@@ -33,3 +33,17 @@ export function formatLongFr(date: Date | string): string {
 export function toIsoLocal(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
+
+/** '2024-12-31' + n days (local calendar). */
+export function addDaysIso(iso: string, days: number): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  return toIsoLocal(new Date(y, m - 1, d + days));
+}
+
+/** ISO dates compare as strings: clamp `value` into [min, max]. */
+export function clampIso(value: string, min: string, max: string): string {
+  return value < min ? min : value > max ? max : value;
+}
+
+/** Local "today" (todayIso() is UTC and can be yesterday / tomorrow around midnight). */
+export const todayLocalIso = () => toIsoLocal(new Date());

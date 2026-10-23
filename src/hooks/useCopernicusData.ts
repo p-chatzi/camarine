@@ -2,8 +2,8 @@
 // Everything that depends on "the selected day" (telemetry, heat factor) is derived here.
 import { useEffect, useMemo, useState } from 'react';
 import { fetchPipeline } from '../api/copernicus';
-import { DEFAULT_START_DATE } from '../config';
-import { todayIso, yearOf } from '../lib/dates';
+import { AVERAGE_DEFAULT_DAYS, DEFAULT_START_DATE } from '../config';
+import { addDaysIso, clampIso, todayLocalIso, yearOf } from '../lib/dates';
 import type { AnnualAnomaly, Pipeline, PipelineRecord, Telemetry } from '../types';
 
 /** Mean anomaly per year (used for the "Pic d'anomalie" KPI). */
@@ -23,8 +23,11 @@ function annualAnomalies(records: PipelineRecord[]): AnnualAnomaly[] {
 
 export function useCopernicusData() {
   const [isLoading, setIsLoading] = useState(true);
-  const [startDate, setStartDate] = useState(DEFAULT_START_DATE);
-  const [endDate, setEndDate] = useState(todayIso());
+  // Analysis period (Comprendre, what /api/mhw returns): 1982 → today by default.
+  const [startDate, setStartDateRaw] = useState(DEFAULT_START_DATE);
+  const [endDate, setEndDateRaw] = useState(todayLocalIso());
+  // Map "Moyenne période": a window inside the loaded series, the last year by default (null = default).
+  const [averageRange, setAverageRange] = useState<{ start: string | null; end: string | null }>({ start: null, end: null });
   const [pipeline, setPipeline] = useState<Pipeline | null>(null);
   const [annual, setAnnual] = useState<AnnualAnomaly[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
@@ -50,6 +53,20 @@ export function useCopernicusData() {
   useEffect(reload, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const records = pipeline?.records ?? [];
+
+  // Bounds: never before the first Copernicus day (1982-01-01), never in the future; days and
+  // averages only within the series actually loaded. Enforced here (typing a date in the field
+  // bypasses the min/max of <input type="date">), whatever the screen that sets them.
+  const today = todayLocalIso();
+  const setStartDate = (value: string) => value && setStartDateRaw(clampIso(value, DEFAULT_START_DATE, endDate < today ? endDate : today));
+  const setEndDate = (value: string) => value && setEndDateRaw(clampIso(value, startDate > DEFAULT_START_DATE ? startDate : DEFAULT_START_DATE, today));
+  const firstDay = records[0]?.date ?? startDate;
+  const lastDay = records[records.length - 1]?.date ?? endDate;
+  const averageEnd = clampIso(averageRange.end ?? lastDay, firstDay, lastDay);
+  const averageStart = clampIso(averageRange.start ?? addDaysIso(averageEnd, -AVERAGE_DEFAULT_DAYS), firstDay, averageEnd);
+  const setAverageStart = (value: string) => value && setAverageRange((r) => ({ ...r, start: clampIso(value, firstDay, averageEnd) }));
+  const setAverageEnd = (value: string) => value && setAverageRange((r) => ({ ...r, end: clampIso(value, averageStart, lastDay) }));
+  const averageRecords = useMemo(() => records.filter((r) => r.date >= averageStart && r.date <= averageEnd), [records, averageStart, averageEnd]);
   const selectedRecord: PipelineRecord | undefined = records[selectedIndex] ?? records[records.length - 1];
   const selectedDate = selectedRecord?.date ?? '';
 
@@ -88,7 +105,7 @@ export function useCopernicusData() {
    * ⚠ The placeholder's SST/threshold are NOT real data for that day.
    */
   const selectDate = (date: string) => {
-    if (!date) return;
+    if (!date || date < firstDay || date > lastDay) return; // outside the data: ignored
     const idx = records.findIndex((r) => r.date === date);
     if (idx !== -1) {
       setSelectedIndex(idx);
@@ -117,6 +134,19 @@ export function useCopernicusData() {
     pipeline,
     records,
     events: pipeline?.events ?? [],
+    /** First / last day of the loaded series (limits of the day picker and of the average). */
+    firstDay,
+    lastDay,
+    /** Earliest day Copernicus can provide (limit of the analysis period). */
+    dataStartDate: DEFAULT_START_DATE,
+    today,
+    averageStart,
+    setAverageStart,
+    averageEnd,
+    setAverageEnd,
+    averageRecords,
+    /** Back to the default window (last year of data). */
+    resetAverage: () => setAverageRange({ start: null, end: null }),
     selectedDate,
     selectDate,
     selectExistingDate,
