@@ -17,6 +17,7 @@ __pycache__/
 # Generated data
 cache_data/
 suggestions_data/
+forum_data/
 /copernicus_nc_data.json
 
 # Local environment

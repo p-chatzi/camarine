@@ -62,19 +62,24 @@ def _take_quota(now: float | None = None) -> bool:
         return True
 
 
-def build_email(subject: str, body: str) -> EmailMessage:
+def smtp_configured() -> bool:
+    return bool(_env("CAMARINE_SMTP_HOST"))
+
+
+def build_email(subject: str, body: str, to: str | None = None) -> EmailMessage:
+    """`to` = one recipient (forum mails: verification, password reset); default = the maintainer."""
     msg = EmailMessage()  # refuses CR/LF in headers: no header injection
     msg["Subject"] = subject
     msg["From"] = _env("CAMARINE_NOTIFY_FROM") or _env("CAMARINE_SMTP_USER")
-    msg["To"] = ", ".join(a.strip() for a in _env("CAMARINE_NOTIFY_TO").split(",") if a.strip())
+    msg["To"] = to or ", ".join(a.strip() for a in _env("CAMARINE_NOTIFY_TO").split(",") if a.strip())
     msg.set_content(body)
     return msg
 
 
-def send_email(subject: str, body: str) -> None:
+def send_email(subject: str, body: str, to: str | None = None) -> None:
     host, port = _env("CAMARINE_SMTP_HOST"), int(_env("CAMARINE_SMTP_PORT") or 587)
     user, password = _env("CAMARINE_SMTP_USER"), _env("CAMARINE_SMTP_PASSWORD")
-    msg = build_email(subject, body)
+    msg = build_email(subject, body, to)
     context = ssl.create_default_context()
     if port == 465:
         server: smtplib.SMTP = smtplib.SMTP_SSL(host, port, context=context, timeout=15)

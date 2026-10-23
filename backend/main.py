@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import os
 import traceback
+from contextlib import asynccontextmanager
 from datetime import date
 from typing import Any
 
@@ -17,14 +18,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from pydantic import BaseModel, ConfigDict, Field, StrictStr
 
-from . import notify, report_service, suggestion_service
+from . import forum, notify, report_service, suggestion_service
 from .map_service import get_map_payload
 from .mhw_service import get_mhw_payload
 
 # Comma-separated list, e.g. "https://camarine.example.org". Defaults to the Vite dev server.
 ALLOWED_ORIGINS = os.environ.get("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
 
-app = FastAPI(title="Camarine Copernicus API")
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    forum.startup()  # creates the forum tables / categories, starts the retention purge
+    yield
+
+
+app = FastAPI(title="Camarine Copernicus API", lifespan=lifespan)
 # /api/map returns ~100k pixels: gzip cuts the transfer by ~5x.
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 app.add_middleware(
@@ -93,16 +100,20 @@ def current_map(
 
 SUGGESTIONS_PATH = "/api/suggestions"
 REPORTS_PATH = "/api/reports"
+FORUM_PATH = "/api/forum/"
+FORUM_MAX_BODY = 64 * 1024
 
 
 @app.middleware("http")
 async def limit_suggestion_body(request: Request, call_next):
     """Reject oversized or unsized bodies on the public forms BEFORE they are read/parsed."""
-    if request.url.path in (SUGGESTIONS_PATH, REPORTS_PATH) and request.method == "POST":
+    is_forum_write = request.url.path.startswith(FORUM_PATH) and request.method in ("POST", "PATCH", "PUT", "DELETE")
+    if (request.url.path in (SUGGESTIONS_PATH, REPORTS_PATH) and request.method == "POST") or is_forum_write:
+        max_bytes = FORUM_MAX_BODY if is_forum_write else suggestion_service.MAX_BODY_BYTES
         length = request.headers.get("content-length")
         if length is None or not length.isdigit():
             return JSONResponse({"detail": "Content-Length requis."}, status_code=411)
-        if int(length) > suggestion_service.MAX_BODY_BYTES:
+        if int(length) > max_bytes:
             return JSONResponse({"detail": "Message trop long."}, status_code=413)
         if not request.headers.get("content-type", "").startswith("application/json"):
             return JSONResponse({"detail": "JSON attendu."}, status_code=415)
@@ -167,3 +178,18 @@ def report_species(payload: SpeciesReportIn, request: Request) -> dict[str, str]
         raise HTTPException(status_code=503, detail="Les signalements sont temporairement fermés.") from exc
     notify.notify(*report_service.describe(record))
     return {"status": "ok"}
+
+
+@app.middleware("http")
+async def forum_security_headers(request: Request, call_next):
+    """Forum answers hold personal data / tokens: never cached, never sniffed, no referrer leak."""
+    response = await call_next(request)
+    if request.url.path.startswith(FORUM_PATH):
+        response.headers["Cache-Control"] = "no-store"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Referrer-Policy"] = "same-origin"
+        response.headers["X-Frame-Options"] = "DENY"
+    return response
+
+
+app.include_router(forum.router)

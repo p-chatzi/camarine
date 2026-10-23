@@ -1,2 +1,11 @@
 fastapi>=0.115,<1
-uvicorn[standard]>=0.30,<1
+uvicorn[standard]>=0.30,<1# Forum (accounts, MFA, SSO) — recognised libraries only, see FORUM.md
+sqlalchemy>=2.0,<3
+argon2-cffi>=23.1,<26
+cryptography>=43
+pyotp>=2.9,<3
+webauthn>=2.2,<4
+pyjwt[crypto]>=2.9,<3
+httpx>=0.27,<1
+email-validator>=2.2,<3
+zxcvbn>=4.4,<5

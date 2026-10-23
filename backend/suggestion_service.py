@@ -53,7 +53,7 @@ class StorageFullError(RuntimeError):
     """The review file reached MAX_FILE_BYTES."""
 
 
-def clean_text(value: str, max_len: int, *, multiline: bool) -> str:
+def clean_text(value: str, max_len: int, *, multiline: bool, max_lines: int = MAX_NEWLINES, neutralize_formulas: bool = True) -> str:
     """Normalise untrusted text to plain, visible Unicode.
 
     - NFC normalisation (one canonical form for accents);
@@ -61,7 +61,8 @@ def clean_text(value: str, max_len: int, *, multiline: bool) -> str:
       overrides and zero-width chars, Co private use, Cs surrogates, Cn unassigned), except "\\n"
       when `multiline`; tabs become spaces, CRLF/CR become LF;
     - spaces trimmed per line, at most 2 consecutive blank lines and MAX_NEWLINES lines;
-    - a leading = + - @ is prefixed with an apostrophe (CSV/tableur formula injection);
+    - a leading = + - @ is prefixed with an apostrophe (CSV/tableur formula injection), unless
+      `neutralize_formulas` is False (forum posts: never exported to a spreadsheet);
     - length capped AFTER cleaning.
     """
     text = unicodedata.normalize("NFC", value).replace("\r\n", "\n").replace("\r", "\n").replace("\t", " ")
@@ -70,9 +71,9 @@ def clean_text(value: str, max_len: int, *, multiline: bool) -> str:
     allowed_newline = "\n" if multiline else ""
     text = "".join(ch for ch in text if ch == allowed_newline or unicodedata.category(ch)[0] != "C")
     lines = [" ".join(line.split()) for line in text.split("\n")]
-    text = "\n".join(lines[:MAX_NEWLINES]).strip()
+    text = "\n".join(lines[:max_lines]).strip()
     text = _MANY_BLANK_LINES.sub("\n\n", text)
-    if text.startswith(_FORMULA_PREFIXES):
+    if neutralize_formulas and text.startswith(_FORMULA_PREFIXES):
         text = "'" + text
     return text[:max_len]
 
