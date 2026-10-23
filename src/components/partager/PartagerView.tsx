@@ -21,10 +21,10 @@ export function PartagerView({ data, settings, exportContext, forum }: Props) {
   const [previewFormat, setPreviewFormat] = useState<ExportFormat | null>(null);
 
   return (
-    <main className="flex-1 overflow-y-auto w-full px-4 lg:px-8 py-6 bg-slate-50">
+    <main className="flex-1 overflow-y-auto w-full px-3 sm:px-4 lg:px-8 pb-8 pt-1">
       <div className="max-w-6xl mx-auto space-y-6">
         <div>
-          <h2 className="text-2xl font-black text-slate-900 flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center gap-2">
             <Database className="w-6 h-6 text-indigo-600" /> Centre de Partage & Données
           </h2>
           <p className="text-sm text-slate-500 mt-1">

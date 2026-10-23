@@ -1,4 +1,5 @@
-// "Façades & Calques SST" dropdown: basin filter, map type, species trend, satellite raster.
+// Content of the "Façades" pop-up (bottom sheet on phones): basin filter, map type, species trend,
+// satellite raster. The pop-up itself (position, focus, Escape) is ui/Popover.
 import { ChevronRight, Compass, Layers, Thermometer, X } from 'lucide-react';
 import { DATA_SOURCES } from '../../data/metadata';
 import type { MapSettings } from '../../hooks/useMapSettings';
@@ -20,10 +21,10 @@ interface Props {
 
 export function FilterPanel({ settings: s, onClose }: Props) {
   return (
-    <div id="filter-panel" className="pointer-events-auto min-h-0 overflow-y-auto overscroll-contain w-[min(20rem,100%)] bg-white/95 backdrop-blur-xl border border-sky-200/90 rounded-2xl p-4 shadow-2xl shadow-sky-950/15 space-y-4">
+    <div className="p-4 pt-2 sm:pt-4 space-y-4">
       <div className="flex items-center justify-between border-b border-sky-100 pb-2.5">
         <span className="text-xs font-extrabold uppercase tracking-wider text-sky-900 flex items-center gap-1.5">
-          <Compass className="w-4 h-4 text-sky-600" /> Façades & Calques
+          <Compass className="w-4 h-4 text-sky-600" aria-hidden="true" /> Façades & affichage
         </span>
         <button onClick={onClose} aria-label="Fermer les filtres" className="tap -m-1 p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-sky-50 flex items-center justify-center">
           <X className="w-4 h-4" aria-hidden="true" />

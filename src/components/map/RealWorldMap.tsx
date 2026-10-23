@@ -23,8 +23,6 @@ interface Props {
   showThermalOverlay: boolean;
   showSatelliteRaster: boolean;
   cells: MapCell[];
-  mapDate: string;
-  isMapLoading: boolean;
   colorMode: ColorMode;
   dataType: MapDataType;
   telemetry: Telemetry | null;
@@ -54,15 +52,8 @@ export function RealWorldMap(props: Props) {
   return (
     <div className="relative w-full h-full">
       <div ref={containerRef} className="w-full h-full z-10" />
-      {/* Non-blocking: the previous day's pixels stay visible and usable while the new day loads. */}
-      {leaflet && props.isMapLoading && (
-        <div role="status" className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
-          <div className="bg-white/95 px-4 py-2 rounded-full shadow-lg flex items-center gap-2 border border-sky-200">
-            <div className="w-4 h-4 border-2 border-sky-200 border-t-sky-600 rounded-full animate-spin" />
-            <span className="text-xs font-bold text-sky-900">Chargement des pixels SST du {props.mapDate}…</span>
-          </div>
-        </div>
-      )}
+      {/* Loading of a new day: spinner in the date chip (layout/DateControl.tsx); the previous day's
+          pixels stay visible and usable meanwhile. */}
     </div>
   );
 }

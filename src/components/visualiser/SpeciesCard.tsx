@@ -20,7 +20,7 @@ interface Props {
 
 function PhotoPlaceholder({ isLoading }: { isLoading: boolean }) {
   return (
-    <div className="relative bg-gradient-to-br from-sky-100 via-cyan-50 to-teal-100 h-44 sm:h-56 shrink-0 border-b border-sky-100 flex flex-col items-center justify-center gap-2 text-sky-800">
+    <div className="relative bg-gradient-to-br from-sky-100 via-cyan-50 to-teal-100 camarine-photo shrink-0 border-b border-sky-100 flex flex-col items-center justify-center gap-2 text-sky-800">
       {isLoading ? (
         <div className="w-7 h-7 border-4 border-sky-200 border-t-sky-600 rounded-full animate-spin" />
       ) : (
@@ -39,7 +39,7 @@ function PhotoCarousel({ species, images }: Pick<Props, 'species' | 'images'>) {
 
   return (
     <div
-      className="relative bg-sky-100 h-44 sm:h-56 shrink-0 overflow-hidden group border-b border-sky-100 select-none"
+      className="relative bg-sky-100 camarine-photo shrink-0 overflow-hidden group border-b border-sky-100 select-none"
       onMouseEnter={() => carousel.setIsHovering(true)}
       onMouseLeave={() => carousel.setIsHovering(false)}
     >
@@ -183,46 +183,59 @@ export function SpeciesCard({ species, images, imagesLoading, year, heatFactor, 
   const titleRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
-    titleRef.current?.focus({ preventScroll: true });
+    const title = titleRef.current;
+    title?.focus({ preventScroll: true });
     return () => {
-      // Pins are re-created when the selection changes: fall back to the new pin of this species.
-      const target = previous?.isConnected
-        ? previous
-        : document.querySelector<HTMLElement>(`.leaflet-marker-icon[aria-label^="${CSS.escape(species.name)} ("]`);
-      target?.focus({ preventScroll: true });
+      // Pins are re-created when the selection changes (after this cleanup): wait a frame, then focus
+      // the new pin of this species, or the element that opened the card (catalogue, …).
+      requestAnimationFrame(() => {
+        if (title?.isConnected) return; // still open (other species, or React StrictMode re-run)
+        const pin = document.querySelector<HTMLElement>(`.leaflet-marker-icon[aria-label^="${CSS.escape(species.name)} ("]`);
+        const target = pin ?? (previous?.isConnected ? previous : null);
+        target?.focus({ preventScroll: true });
+      });
     };
   }, [species.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    // Phones: bottom sheet over 60 % of the map (SPECIES_SHEET_RATIO in config.ts), the species stays
-    // visible above it. ≥ 640 px: panel on the right (420 px).
+    // Below 1024 px (phones, tablets, small windows): full screen, over the header too, so the photos
+    // and the text get all the room. ≥ 1024 px: wide panel on the right (SPECIES_CARD in config.ts),
+    // the map and the species pin stay visible on the left.
     <aside
       onClick={(e) => e.stopPropagation()}
       aria-labelledby="species-card-title"
-      className="absolute inset-x-0 bottom-0 h-[60%] rounded-t-2xl sm:inset-x-auto sm:top-4 sm:right-4 sm:bottom-4 sm:h-auto sm:w-[420px] sm:rounded-2xl z-30 bg-white/95 backdrop-blur-xl border border-sky-200 shadow-2xl shadow-sky-950/20 flex flex-col overflow-hidden"
+      className="camarine-species-card fixed inset-0 z-[60] lg:absolute lg:inset-auto lg:top-16 lg:right-3 lg:bottom-3 lg:w-[min(42rem,46vw)] lg:rounded-3xl bg-white lg:bg-white/97 lg:backdrop-blur-xl lg:border lg:border-sky-200 shadow-2xl shadow-sky-950/20 flex flex-col overflow-hidden"
     >
-      <div className="p-4 bg-gradient-to-r from-sky-50 via-cyan-50/50 to-white border-b border-sky-100 flex items-start justify-between gap-2 shrink-0">
-        <div>
-          {onBack && (
-            <button onClick={onBack} className="tap -ml-1 px-1 mb-1 flex items-center gap-1 text-[11px] font-semibold text-sky-700 hover:text-sky-950 rounded-md">
-              <ArrowLeft className="w-3.5 h-3.5" /> Catalogue des espèces
-            </button>
-          )}
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-sky-100 text-sky-800">{species.basin}</span>
-            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700">{KINGDOM_LABELS[species.kingdom]}</span>
-            <span
-              className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${isDecline ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}`}
-            >
-              {species.trendLabel}
-            </span>
+      <div className="shrink-0 bg-gradient-to-r from-sky-50 via-cyan-50/50 to-white border-b border-sky-100 pt-[env(safe-area-inset-top)]">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            {onBack && (
+              <button onClick={onBack} className="tap min-h-8 -ml-1 px-1 mb-0.5 flex items-center gap-1 text-xs font-semibold text-sky-700 hover:text-sky-950 rounded-md">
+                <ArrowLeft className="w-4 h-4" aria-hidden="true" /> Catalogue des espèces
+              </button>
+            )}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-sky-100 text-sky-800">{species.basin}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-700">{KINGDOM_LABELS[species.kingdom]}</span>
+              <span
+                className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${isDecline ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}`}
+              >
+                {species.trendLabel}
+              </span>
+            </div>
+            <h2 id="species-card-title" ref={titleRef} tabIndex={-1} className="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1 leading-tight">
+              {species.name}
+            </h2>
+            <p className="text-sm italic text-slate-500">{species.scientificName}</p>
           </div>
-          <h2 id="species-card-title" ref={titleRef} tabIndex={-1} className="text-lg font-extrabold text-slate-900 mt-1 leading-tight">{species.name}</h2>
-          <p className="text-xs italic text-slate-500">{species.scientificName}</p>
+          <button
+            onClick={onClose}
+            aria-label="Fermer la fiche"
+            className="h-11 w-11 flex items-center justify-center rounded-2xl bg-white hover:bg-sky-100 text-slate-600 hover:text-slate-900 border border-sky-200 shadow-sm shrink-0"
+          >
+            <X className="w-5 h-5" aria-hidden="true" />
+          </button>
         </div>
-        <button onClick={onClose} aria-label="Fermer la fiche" className="tap flex items-center justify-center p-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-slate-500 hover:text-slate-900 border border-sky-200/80 shrink-0">
-          <X className="w-4 h-4" />
-        </button>
       </div>
 
       {/* Photos + text scroll together: on a phone bottom sheet there is no room for a fixed photo. */}
@@ -233,7 +246,7 @@ export function SpeciesCard({ species, images, imagesLoading, year, heatFactor, 
           <PhotoPlaceholder isLoading={imagesLoading} />
         )}
 
-        <div className="p-4 space-y-3.5">
+        <div className="max-w-3xl mx-auto p-4 sm:p-6 space-y-4">
           <DraftNotice />
           <div className={`p-3 rounded-xl border ${isDecline ? 'bg-rose-50/70 border-rose-200' : 'bg-emerald-50/70 border-emerald-200'}`}>
             <div className="flex items-center justify-between text-xs mb-1">

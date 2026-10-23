@@ -11,10 +11,10 @@ const ROWS = [
 
 export function HobdayExplainer() {
   return (
-    <div className="bg-white border border-sky-200/80 rounded-2xl p-6 shadow-xs flex flex-col xl:flex-row gap-6">
+    <div className="bg-white border border-sky-200/80 rounded-2xl p-4 sm:p-6 shadow-xs flex flex-col xl:flex-row gap-4 sm:gap-6">
       <div className="flex-1 space-y-4">
-        <h3 className="text-lg font-black text-slate-900 flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-rose-600" />
+        <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" aria-hidden="true" />
           Protocole de Catégorisation de Hobday (2018)
         </h3>
         <p className="text-sm text-slate-600 leading-relaxed">

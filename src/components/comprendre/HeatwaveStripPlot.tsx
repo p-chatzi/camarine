@@ -1,8 +1,13 @@
-// One horizontal line per year; each heatwave is a red ribbon placed at its day of year.
+// "Canicules marines sur toute la série temporelle", two views of the same events:
+// - Calendrier: one line per year, each heatwave a red ribbon at its day of year (wide screens);
+// - Par année: days of heatwave per year (HeatwaveYearBars), the default on phones, where a
+//   365-day axis squeezed into ~300 px is unreadable.
 import { Fragment, useState } from 'react';
+import { PHONE_QUERY, useMediaQuery } from '../../hooks/useMediaQuery';
 import { formatLongFr, getDayOfYear, toIsoLocal, yearsInRecords } from '../../lib/dates';
 import { eventPeakDate, getHobdayCategory } from '../../lib/hobday';
 import type { MhwEvent, PipelineRecord } from '../../types';
+import { HeatwaveYearBars } from './HeatwaveYearBars';
 
 interface HoverInfo {
   id: string;
@@ -19,7 +24,7 @@ interface Props {
   events: MhwEvent[];
 }
 
-export function HeatwaveStripPlot({ records, events }: Props) {
+function CalendarStrip({ records, events }: Props) {
   const [hover, setHover] = useState<HoverInfo | null>(null);
 
   const ribbon = (ev: MhwEvent, year: number) => {
@@ -29,7 +34,7 @@ export function HeatwaveStripPlot({ records, events }: Props) {
     const peakRec = records.find((r) => r.date === eventPeakDate(ev));
     const color = peakRec ? getHobdayCategory(peakRec.sst, peakRec.climatology, peakRec.threshold).color : 'bg-rose-500 text-white';
 
-    const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const onMouseMove = (e: React.MouseEvent<HTMLButtonElement>) => {
       const rect = e.currentTarget.parentElement!.getBoundingClientRect();
       const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
       const hoverDate = new Date(year, 0, Math.floor(pct * 365) + 1);
@@ -43,14 +48,28 @@ export function HeatwaveStripPlot({ records, events }: Props) {
       });
     };
 
+    // Keyboard focus / tap: show the peak day of the episode.
+    const showPeak = () => {
+      const peak = eventPeakDate(ev);
+      setHover({ id: ev.id, x: (getDayOfYear(peak) / 365) * 100, date: formatLongFr(peak), temp: peakRec ? peakRec.sst : null, color });
+    };
+
     return (
       <Fragment key={ev.id}>
-        <div
-          className="absolute h-3 -top-1 bg-red-400/90 hover:bg-red-500 cursor-pointer transition-colors"
+        <button
+          type="button"
+          aria-label={`Canicule du ${formatLongFr(ev.start)} au ${formatLongFr(ev.end)} (${ev.durationDays ?? ev.duration ?? '?'} jours)`}
+          className="group/rib absolute h-6 -top-3 flex items-center cursor-pointer"
           style={{ left: `${leftPct}%`, width: `${Math.max(0.5, widthPct)}%` }}
           onMouseLeave={() => setHover(null)}
+          onBlur={() => setHover(null)}
           onMouseMove={onMouseMove}
-        />
+          onFocus={showPeak}
+          onClick={showPeak}
+        >
+          {/* Thin red ribbon, 24 px tall hit area around it (mouse / touch). */}
+          <span className="block w-full h-3 bg-red-400/90 group-hover/rib:bg-red-500 group-focus-visible/rib:bg-red-600 transition-colors" aria-hidden="true" />
+        </button>
         {hover?.id === ev.id && (
           <div
             className={`absolute z-50 pointer-events-none px-2.5 py-1.5 rounded shadow-lg text-[10px] flex flex-col gap-0.5 whitespace-nowrap transform -translate-x-1/2 -translate-y-[130%] transition-none ${hover.color}`}
@@ -66,10 +85,8 @@ export function HeatwaveStripPlot({ records, events }: Props) {
   };
 
   return (
-    <div className="bg-white border border-sky-200/80 rounded-2xl p-5 shadow-xs pb-16">
-      <h3 className="text-sm font-bold text-slate-900 mb-2">Canicules marines sur toute la série temporelle</h3>
-      <p className="text-xs text-slate-600 mb-2">Dans les deux graphes ci-dessous, les épisodes de canicules marines sont illustrés par les rubans rouges.</p>
-
+    <div className="pb-10">
+      <p className="text-xs text-slate-600 mb-2">Chaque ruban rouge est un épisode de canicule marine, placé à sa date dans l’année.</p>
       <div className="flex relative pl-14 pr-4 pt-2 pb-8">
         <div className="absolute left-0 top-0 bottom-8 flex items-center justify-center w-8">
           <span className="text-xs font-bold text-slate-600 -rotate-90 whitespace-nowrap tracking-widest">Année</span>
@@ -95,5 +112,46 @@ export function HeatwaveStripPlot({ records, events }: Props) {
       </div>
       <div className="text-center text-xs text-slate-600 mt-4">Jour de l'année</div>
     </div>
+  );
+}
+
+type View = 'calendar' | 'years';
+
+export function HeatwaveStripPlot({ records, events }: Props) {
+  const isPhone = useMediaQuery(PHONE_QUERY);
+  const [choice, setChoice] = useState<View | null>(null);
+  const view: View = choice ?? (isPhone ? 'years' : 'calendar');
+
+  return (
+    <section aria-labelledby="mhw-series-title" className="bg-white border border-sky-200/80 rounded-2xl p-4 sm:p-5 shadow-xs">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+        <div>
+          <h3 id="mhw-series-title" className="text-sm font-bold text-slate-900">
+            Canicules marines sur toute la série temporelle
+          </h3>
+          <p className="text-xs text-slate-500">
+            {view === 'years' ? 'Jours de canicule marine par an, du plus récent au plus ancien. Touchez une année pour ses épisodes.' : 'Une ligne par année.'}
+          </p>
+        </div>
+        <div role="group" aria-label="Affichage" className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold">
+          {(
+            [
+              ['years', 'Par année'],
+              ['calendar', 'Calendrier'],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              onClick={() => setChoice(value)}
+              aria-pressed={view === value}
+              className={`tap h-9 px-3 rounded-lg transition-colors ${view === value ? 'bg-white text-sky-800 shadow-sm border border-slate-200' : 'text-slate-500 hover:text-slate-800'}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+      {view === 'years' ? <HeatwaveYearBars records={records} events={events} /> : <CalendarStrip records={records} events={events} />}
+    </section>
   );
 }

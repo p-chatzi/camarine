@@ -1,7 +1,6 @@
 // Root component: owns the state shared between tabs and picks which tab to render.
 // Tab-specific UI lives in components/<tab>/; data loading lives in hooks/.
 import { useState } from 'react';
-import { BottomBar } from './components/layout/BottomBar';
 import { Header } from './components/layout/Header';
 import { LoadingScreen } from './components/layout/LoadingScreen';
 import { ComprendreView } from './components/comprendre/ComprendreView';
@@ -42,8 +41,10 @@ export default function App() {
   };
 
   return (
-    <div className="h-dvh w-full bg-sky-50 text-slate-800 font-sans selection:bg-sky-500 selection:text-white flex flex-col overflow-hidden">
-      <Header mode={mode} onChangeMode={changeMode} expert={settings.expert} onToggleExpert={settings.toggleExpert} />
+    // Visualiser: the map fills the whole window and the header floats over it (no bar, no footer).
+    // Comprendre / Partager: the same floating chips, above a scrolling page.
+    <div className="relative h-dvh w-full bg-slate-50 text-slate-800 font-sans selection:bg-sky-500 selection:text-white flex flex-col overflow-hidden">
+      <Header mode={mode} onChangeMode={changeMode} expert={settings.expert} onToggleExpert={settings.toggleExpert} overlay={mode === 'visualiser'} />
 
       {mode === 'visualiser' && (
         <VisualiserView
@@ -59,7 +60,6 @@ export default function App() {
       {mode === 'comprendre' && <ComprendreView data={data} cellCount={map.cells.length} />}
       {mode === 'partager' && <PartagerView data={data} settings={settings} exportContext={exportContext} forum={forum} />}
 
-      <BottomBar mode={mode} data={data} settings={settings} />
     </div>
   );
 }

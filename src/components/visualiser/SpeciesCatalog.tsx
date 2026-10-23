@@ -1,10 +1,12 @@
-// Expert mode: top-right drop-down listing every species (faune / flore), with a name search
+// Expert mode: top-right button + pop-up (bottom sheet on phones) listing every species (faune / flore), with a name search
 // and the "suggest a missing species" form at the bottom.
 import { ChevronDown, Fish, Leaf, ListTree, Search, X, type LucideIcon } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useSpeciesSuggestion } from '../../hooks/useSpeciesSuggestion';
 import { IUCN_BADGE_CLASSES, IUCN_LABELS, KINGDOM_LABELS, isThreatened, matchesQuery } from '../../lib/species';
 import type { Kingdom, SpeciesItem } from '../../types';
+import { CHIP } from '../layout/Header';
+import { Popover } from '../ui/Popover';
 import { SuggestionForm } from './SuggestionForm';
 
 interface Props {
@@ -67,78 +69,82 @@ export function SpeciesCatalog({ species, selectedId, isOpen, onToggle, onSelect
   const [query, setQuery] = useState('');
   const suggestion = useSpeciesSuggestion();
   const filtered = useMemo(() => species.filter((sp) => matchesQuery(sp, query)), [species, query]);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   return (
-    // Mobile: below the "Façades" button (same row otherwise) and above the legend.
-    <div
-      onClick={(e) => e.stopPropagation()}
-      className="absolute top-[4.25rem] sm:top-4 right-3 sm:right-4 z-30 flex flex-col items-end gap-2 max-h-[calc(100%-8rem)] sm:max-h-[calc(100%-2rem)]"
-    >
+    <>
       <button
+        ref={buttonRef}
         onClick={onToggle}
         aria-expanded={isOpen}
         aria-controls="species-catalogue"
-        className={`tap flex items-center gap-2 px-4 py-2.5 rounded-2xl font-bold text-xs shadow-lg border transition-all ${
-          isOpen ? 'bg-slate-800 text-white border-slate-900' : 'bg-white/95 hover:bg-white text-slate-800 border-sky-200'
+        aria-haspopup="dialog"
+        className={`${CHIP} flex items-center gap-2 px-3.5 text-sm font-bold transition-colors ${
+          isOpen ? '!bg-slate-800 !border-slate-900 text-white' : 'text-slate-800 hover:bg-white'
         }`}
       >
-        <ListTree className={`w-4 h-4 ${isOpen ? 'text-sky-200' : 'text-sky-600'}`} />
-        <span>Catalogue des espèces ({species.length})</span>
-        <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ListTree className={`w-4 h-4 shrink-0 ${isOpen ? 'text-sky-200' : 'text-sky-600'}`} aria-hidden="true" />
+        <span className="whitespace-nowrap">
+          <span className="sm:hidden">Espèces</span>
+          <span className="hidden sm:inline">Catalogue des espèces</span> <span className="font-semibold opacity-70">({species.length})</span>
+        </span>
+        <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform ${isOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
       </button>
 
       {isOpen && (
-        <div id="species-catalogue" className="w-[calc(100vw-1.5rem)] sm:w-96 min-h-0 flex flex-col bg-white/95 backdrop-blur-xl border border-sky-200 rounded-2xl shadow-2xl shadow-sky-950/15 overflow-hidden">
-          <div className="p-3 border-b border-sky-100 space-y-2 shrink-0">
-            <label className="relative block">
-              <span className="sr-only">Rechercher une espèce</span>
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-              <input
-                type="search"
-                maxLength={80}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Rechercher (nom commun ou scientifique)"
-                className="tap w-full bg-sky-50/70 border border-sky-200 rounded-xl pl-8 pr-8 py-2 text-xs outline-none focus:border-sky-500 focus:bg-white"
-              />
-              {query && (
-                <button onClick={() => setQuery('')} aria-label="Effacer la recherche" className="tap absolute right-0.5 top-1/2 -translate-y-1/2 p-1.5 flex items-center justify-center text-slate-400 hover:text-slate-700">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </label>
-            <p className="text-[10px] text-slate-500">
-              <span className="font-black text-rose-600">−</span> impact négatif de la canicule marine ·{' '}
-              <span className="font-black text-emerald-600">+</span> espèce favorisée · statut Liste rouge UICN
-            </p>
-          </div>
+        <Popover id="species-catalogue" label="Catalogue des espèces" anchorRef={buttonRef} onClose={onToggle} align="end" width={420} scroll={false}>
+          <div className="flex-1 min-h-0 flex flex-col">
+            <div className="p-3 pt-1 sm:pt-3 border-b border-sky-100 space-y-2 shrink-0">
+              <label className="relative block">
+                <span className="sr-only">Rechercher une espèce</span>
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" aria-hidden="true" />
+                <input
+                  type="search"
+                  maxLength={80}
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Nom commun ou scientifique"
+                  className="h-11 w-full bg-sky-50/70 border border-sky-200 rounded-xl pl-9 pr-11 text-sm outline-none focus:border-sky-500 focus:bg-white"
+                />
+                {query && (
+                  <button onClick={() => setQuery('')} aria-label="Effacer la recherche" className="absolute right-0 top-0 h-11 w-11 flex items-center justify-center text-slate-400 hover:text-slate-700">
+                    <X className="w-4 h-4" aria-hidden="true" />
+                  </button>
+                )}
+              </label>
+              <p className="text-[11px] text-slate-500">
+                <span className="font-black text-rose-600">−</span> impact négatif de la canicule marine ·{' '}
+                <span className="font-black text-emerald-600">+</span> espèce favorisée · statut Liste rouge UICN
+              </p>
+            </div>
 
-          <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-4">
-            {GROUPS.map(({ kingdom, icon: Icon }) => {
-              const items = filtered.filter((sp) => sp.kingdom === kingdom);
-              return (
-                <section key={kingdom} aria-label={KINGDOM_LABELS[kingdom]}>
-                  <h3 className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-sky-900 mb-1.5">
-                    <Icon className="w-3.5 h-3.5 text-sky-600" /> {KINGDOM_LABELS[kingdom]}
-                    <span className="text-slate-400 font-bold">({items.length})</span>
-                  </h3>
-                  {items.length === 0 ? (
-                    <p className="text-[11px] text-slate-400 italic px-1">Aucune espèce ne correspond.</p>
-                  ) : (
-                    <ul className="space-y-1.5">
-                      {items.map((sp) => (
-                        <SpeciesRow key={sp.id} sp={sp} isSelected={sp.id === selectedId} onSelect={() => onSelect(sp)} />
-                      ))}
-                    </ul>
-                  )}
-                </section>
-              );
-            })}
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-3 space-y-4">
+              {GROUPS.map(({ kingdom, icon: Icon }) => {
+                const items = filtered.filter((sp) => sp.kingdom === kingdom);
+                return (
+                  <section key={kingdom} aria-label={KINGDOM_LABELS[kingdom]}>
+                    <h3 className="flex items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-wider text-sky-900 mb-1.5">
+                      <Icon className="w-3.5 h-3.5 text-sky-600" aria-hidden="true" /> {KINGDOM_LABELS[kingdom]}
+                      <span className="text-slate-400 font-bold">({items.length})</span>
+                    </h3>
+                    {items.length === 0 ? (
+                      <p className="text-[11px] text-slate-400 italic px-1">Aucune espèce ne correspond.</p>
+                    ) : (
+                      <ul className="space-y-1.5">
+                        {items.map((sp) => (
+                          <SpeciesRow key={sp.id} sp={sp} isSelected={sp.id === selectedId} onSelect={() => onSelect(sp)} />
+                        ))}
+                      </ul>
+                    )}
+                  </section>
+                );
+              })}
 
-            <SuggestionForm form={suggestion} />
+              <SuggestionForm form={suggestion} />
+            </div>
           </div>
-        </div>
+        </Popover>
       )}
-    </div>
+    </>
   );
 }

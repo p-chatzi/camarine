@@ -25,9 +25,15 @@ export const DATA_BOUNDS = { minLat: 39.0, maxLat: 53.5, minLon: -17.0, maxLon: 
 /** Contour de la France métropolitaine + Corse (IGN Admin Express, simplifié). Servi depuis public/. */
 export const FRANCE_OUTLINE_URL = '/geo/france-metropole.geojson';
 
-/** Phones (< 640 px): the species card is a bottom sheet covering this share of the map height
- * (must match `h-[60%]` in SpeciesCard.tsx); the camera keeps the species in the part above it. */
-export const SPECIES_SHEET_RATIO = 0.6;
+/**
+ * Species card (SpeciesCard.tsx): full screen below `fullScreenBelowPx`; above, a panel on the right
+ * of min(maxWidthPx, widthVw × window width) — must match `lg:w-[min(42rem,46vw)]` — and the camera
+ * keeps the species in the part of the map left visible.
+ */
+export const SPECIES_CARD = { fullScreenBelowPx: 1024, maxWidthPx: 672, widthVw: 0.46, marginPx: 12 };
+
+/** Height of the floating header + map tools rows (px): the camera keeps targets below them. */
+export const TOP_CONTROLS_PX = 112;
 
 /** Zoom minimal quand on sélectionne une espèce (l'espèce est centrée à gauche de sa fiche). */
 export const SPECIES_FOCUS_ZOOM = 7.5;

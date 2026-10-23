@@ -51,8 +51,25 @@ body {
   }
 }
 
-/* ---- Map credits on one line (hover / tap / keyboard focus to read them in full), so they never
-   push into the legend, whatever the width left by the species card. */
+/* Small visual targets (e.g. 36 px tabs inside a 44 px chip) with a 44 px tall touch / click area. */
+.hit-44 {
+  position: relative;
+}
+.hit-44::after {
+  content: '';
+  position: absolute;
+  inset: -4px 0;
+}
+
+/* ---- Phones held in portrait with a touch screen: pinch to zoom, the +/− buttons only take room. */
+@media (max-width: 639px) and (pointer: coarse) {
+  .leaflet-control-zoom {
+    display: none;
+  }
+}
+
+/* ---- Map credits on one line (hover / tap / keyboard focus to read them in full), under the
+   bottom-left chips (date, legend), so the chips never cover them. */
 .leaflet-container .leaflet-control-attribution {
   max-width: calc(100vw - 16px);
   white-space: nowrap;
@@ -63,25 +80,60 @@ body {
 .leaflet-container .leaflet-control-attribution:focus-within {
   white-space: normal;
 }
-@media (min-width: 640px) {
+
+/* ---- Species card: photo height, and room left to the map controls when it is a side panel. */
+.camarine-photo {
+  height: clamp(11rem, 42dvh, 26rem);
+}
+@media (min-width: 1024px) {
+  .camarine-photo {
+    height: clamp(11rem, 36dvh, 22rem);
+  }
+  /* Card = min(42rem, 46vw) wide + 12 px margin (SPECIES_CARD in config.ts). */
+  .camarine-card-open .leaflet-bottom.leaflet-right {
+    right: calc(min(42rem, 46vw) + 12px);
+  }
   .camarine-card-open .leaflet-control-attribution {
-    max-width: calc(100vw - 470px);
+    max-width: calc(100vw - min(42rem, 46vw) - 40px);
+  }
+  .camarine-card-open .camarine-bottom-chips {
+    max-width: calc(100% - min(42rem, 46vw) - 40px);
   }
 }
 
-/* ---- Species card open: keep the zoom buttons usable and the legend readable */
-@media (min-width: 1024px) {
-  .camarine-card-open .leaflet-bottom.leaflet-right {
-    right: 452px; /* card width 420 px + margins */
+/* ---- Pop-ups (ui/Popover.tsx): bottom sheet slides up on phones, drop-down fades in elsewhere. */
+@keyframes camarine-sheet-in {
+  from {
+    transform: translateY(100%);
   }
 }
-@media (max-width: 1023px) {
-  .camarine-card-open .leaflet-control-zoom {
-    display: none; /* the card covers that corner; pinch / wheel zoom still work */
+@keyframes camarine-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
   }
 }
-@media (min-width: 640px) {
-  .camarine-card-open .camarine-legend {
-    max-width: calc(100% - 470px); /* wraps instead of sliding under the card */
+.camarine-sheet-in {
+  animation: camarine-sheet-in 200ms ease-out;
+}
+.camarine-pop-in {
+  animation: camarine-pop-in 120ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .camarine-sheet-in,
+  .camarine-pop-in {
+    animation: none;
+  }
+}
+
+/* ---- Big screens and projectors: everything a bit larger (rem-based UI), readable from afar. */
+@media (min-width: 1920px) and (min-height: 1000px) {
+  html {
+    font-size: 112.5%;
+  }
+}
+@media (min-width: 2560px) and (min-height: 1300px) {
+  html {
+    font-size: 125%;
   }
 }
